@@ -6,7 +6,7 @@ import chroma from 'chroma-js';
 
 /* The `RadarChartD3` class is a TypeScript class that represents a radar chart and provides methods
 for rendering the chart with data. */
-export class RadarChartD3 {
+export class RadarChart {
 
     _container
     _data = null;
@@ -215,7 +215,7 @@ export class RadarChartD3 {
         .append("g")
         .style(
           "transform",
-          `translate(${this._margins.left + this._boundedWidth / 2}px, ${this._boundedHeight / 2}px)`
+          `translate(${this._margins.left + this._boundedWidth / 2}px, ${this._boundedHeight / 2 + 55}px)`
         );
   
       // this._bounds
@@ -405,7 +405,7 @@ export class RadarChartD3 {
               .attr("data-row-ind", index)
               .append("path")
               // .style("visibility", "hidden")
-              .attr("visibility", "hidden")
+              // .attr("visibility", "hidden")
               .attr("d", () => this._radarLine(axisSetData[this._field.axisSet]));
         
             // Add dots
@@ -428,7 +428,7 @@ export class RadarChartD3 {
                   .attr("cx", cx)
                   .attr("cy", cy)
                   .attr("data-row-ind", index)
-                  .attr("visibility", "hidden");
+                  // .attr("visibility", "hidden");
               })
               .attr(
                 "title",
@@ -512,6 +512,5 @@ export class RadarChartD3 {
       this._renderAxis();
       this._renderPlots();
       this._emptyMsgBlock();
-      return this;
     }
 }

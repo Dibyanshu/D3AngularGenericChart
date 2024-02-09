@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { RadarChartD3 } from './shared/RadarChart';
+import { RadarChart } from './shared/RadarChart';
 import { RadarChartFakeData } from './data/radarChartFake.data';
+import { PieChart, PieChartData } from './shared/PieChart';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +14,7 @@ import { RadarChartFakeData } from './data/radarChartFake.data';
 })
 export class AppComponent implements OnInit{
   title = 'D3Angular';
-  radarChart = new RadarChartD3('#svgContainer')
+  radarChart = null;
 
   constructor(private modalService: NgbModal) {
   }
@@ -22,16 +23,37 @@ export class AppComponent implements OnInit{
     setTimeout(() => {
       const chartData = new RadarChartFakeData().generateData();
       this.loadRadarChart(chartData);
+
+      this.loadPieChart();
+      this.loadDonutChart();
     }, 1000);
   }
 
-  loadRadarChart(chartData: number[][]) {
+  loadRadarChart(chartData: Array<{ axisSet: Array<{ axis: string, value: number }> }>) {
     const formatedChartData = chartData;
-    // this.radarChart.multiAxesLineColor = this.generatedColorSet
-    // this.radarChart.emptyMessageText = this.emptyMsgText
+    this.radarChart = new RadarChart('#svgRadarContainer')
     this.radarChart.data(formatedChartData);
-
     this.radarChart.render();
+    console.log(this.radarChart);
+  }
+
+  loadPieChart() {
+    const pieChartData: PieChartData[] = [
+      { label: 'Pick in progress', value: 458 },
+      { label: 'Completely picked', value: 1428 }
+    ];
+    const pieChart = new PieChart('#svgPieContainer', pieChartData, {chartType: 'pie', arcScalingEnable: true, arcScalingIndex: 0});
+    console.log(pieChart);
+  }
+
+  loadDonutChart() {
+    const pieChartData: PieChartData[] = [
+      { label: 'Completed', value: 250 },
+      { label: 'To be recieved', value: 801 },
+      { label: 'In progress', value: 390 }
+    ];
+    const pieChart = new PieChart('#svgDonutContainer', pieChartData, {chartType: 'donut', innerRadius: 170});
+    console.log(pieChart);
   }
 
   public open(modal: any): void {

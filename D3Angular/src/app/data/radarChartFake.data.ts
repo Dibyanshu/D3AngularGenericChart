@@ -6,22 +6,66 @@ export class RadarChartFakeData {
  * 
  * @returns An array of arrays containing the generated data.
  */
-  public generateData(): number[][] {
+  public generateData(): Array<{ axisSet: Array<{ axis: string, value: number }> }> {
     // Generate random data for the radar chart
-    const data: number[][] = [];
-
-    // Add data for each category
-    for (let i = 0; i < 5; i++) {
-      const categoryData: number[] = [];
-
-      // Generate random values for each category
-      for (let j = 0; j < 10; j++) {
-        const value = Math.random() * 100;
-        categoryData.push(value);
+    const data = [
+      {
+        axisSet:[
+          {
+            axis: "Axis 1",
+            value: Math.random() * 100,
+          },
+          {
+            axis: "Axis 2",
+            value: Math.random() * 100,
+          },
+          {
+            axis: "Axis 3",
+            value: Math.random() * 100,
+          },
+          {
+            axis: "Axis 4",
+            value: Math.random() * 100,
+          },
+          {
+            axis: "Axis 5",
+            value: Math.random() * 100,
+          },
+          {
+            axis: "Axis 6",
+            value: Math.random() * 100,
+          },
+        ],
+      },
+      {
+        axisSet:[
+          {
+            axis: "Axis 1",
+            value: Math.random() * 100,
+          },
+          {
+            axis: "Axis 2",
+            value: Math.random() * 100,
+          },
+          {
+            axis: "Axis 3",
+            value: Math.random() * 100,
+          },
+          {
+            axis: "Axis 4",
+            value: Math.random() * 100,
+          },
+          {
+            axis: "Axis 5",
+            value: Math.random() * 100,
+          },
+          {
+            axis: "Axis 6",
+            value: Math.random() * 100,
+          },
+        ],
       }
-
-      data.push(categoryData);
-    }
+    ];
 
     return data;
   }
