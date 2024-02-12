@@ -38,19 +38,19 @@ export class AppComponent implements OnInit{
 
   loadPieChart() {
     const pieChartData: PieChartData[] = [
-      { label: 'Pick in progress', value: 458 },
-      { label: 'Completely picked', value: 1428 }
+      { label: 'Pick in progress', value: Math.floor(Math.random() * 1000) },
+      { label: 'Completely picked', value: Math.floor(Math.random() * 1000) }
     ];
-    const pieChart = new PieChart('#svgPieContainer', pieChartData, {chartType: 'pie', arcScalingEnable: true, arcScalingIndex: 0});
+    new PieChart('#svgPieContainer', pieChartData, {chartType: 'pie', arcScalingEnable: true, arcScalingIndex: 0});
   }
 
   loadDonutChart() {
     const pieChartData: PieChartData[] = [
-      { label: 'Completed', value: 250 },
-      { label: 'To be recieved', value: 801 },
-      { label: 'In progress', value: 390 }
+      { label: 'Completed', value: Math.floor(Math.random() * 1000) },
+      { label: 'To be recieved', value: Math.floor(Math.random() * 1000) },
+      { label: 'In progress', value: Math.floor(Math.random() * 1000) }
     ];
-    const pieChart = new PieChart('#svgDonutContainer', pieChartData, {chartType: 'donut', innerRadius: 170});
+    new PieChart('#svgDonutContainer', pieChartData, {chartType: 'donut', innerRadius: 170});
   }
 
   public open(modal: any): void {
