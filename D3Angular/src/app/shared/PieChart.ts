@@ -45,6 +45,8 @@ export class PieChart {
   public set data(v : PieChartData[]) {
     this._data = v;
   }
+  private labelStartPositionMap: Map<number, object> = new Map();
+  private labelEndPositionMap: Map<number, object> = new Map();
   
   
 
@@ -82,6 +84,8 @@ export class PieChart {
         if(i === this.chartOptions.arcScalingIndex && this.chartOptions.arcScalingEnable) {
           d3.select(nodes[i]).attr("transform", `scale(1.06)`);  
         }
+        this.labelStartPositionMap.set(i, this.setLabelArcProps(this.arc, d))
+        
       })
       .attr("class", "arc");
 
@@ -89,64 +93,99 @@ export class PieChart {
       .attr("d", this.arc)
       .attr("fill", (d, i) => this.colors(i.toString()));
 
-    this.drawLabelPointerArrow()
+    // this.drawLabelPointerArrow()
+    this.drawArcForLabelXYCalculation(data)
   }
 
-  drawLabelPointerArrow() {
-    // const textGroup = this.arcs.append("g")
-    //     .each((d, i, nodes) => {
-    //         if(this.chartOptions.arcScalingEnable) {
-    //             console.log('d-', d)
-    //             // console.log('i-', i)
-    //             // console.log('nodes-', nodes)
-    //             debugger
-    //         }
-    //     })
-    //     // .attr("transform", d => `translate(${this.arc.centroid(d)})`)
-    //     .attr("transform", d => {
-    //         var c = this.arc.centroid(d),
-    //             x = c[0],
-    //             y = c[1],
-    //             // pythagorean theorem for hypotenuse
-    //             h = Math.sqrt(x*x + y*y);
-    //         return "translate(" + (x/h * 20) +  ',' +
-    //            (y/h * 20) +  ")"; 
-    //     })
+  private drawArcForLabelXYCalculation(data: number[]): void {
+    const labelPie = d3.pie<number>().value(d => d).sort(null);
+    const labelArc = d3.arc<d3.PieArcDatum<number>>()
+      .innerRadius(0)
+      .outerRadius(this.radius + 320);
 
-    this.arcs.append("text")
+    const labelArcs = this.svg.selectAll("labelArc")
+      .data(labelPie(data))
+      .style("visibility", "hidden")
+      .enter()
+      .append("g")
+      .style("visibility", "hidden")
+      .each((d, i, nodes) => {
+        if(i === this.chartOptions.arcScalingIndex && this.chartOptions.arcScalingEnable) {
+          d3.select(nodes[i]).attr("transform", `scale(1.06)`);  
+        }
+      })
+      .attr("class", "labelArc");
+
+    labelArcs.append("path")
+      .attr("d", labelArc)
+      .style("visibility", "hidden")
+      .attr("fill", (d, i) => this.colors(i.toString()));
+    
+    labelArcs.append("g")
         .each((d, i, nodes) => {
-            debugger
+            this.labelEndPositionMap.set(i, this.setLabelArcProps(labelArc, d))
+            console.log('Side---', (d.endAngle + d.startAngle)/2 > Math.PI ? "Left" : "Right")
         })
-        .attr("transform", d => {
-            const c = this.arc.centroid(d);
-            const x = c[0];
-            const y = c[1];
-            // pythagorean theorem for hypotenuse
-            const h = Math.sqrt(x*x + y*y);
-            return "translate(" + (x/h * 380) +  ',' +(y/h * 240) +  ")"; 
-        })
-        // .attr("text-anchor", (d) => {
-        //     // are we past the center?
-        //     return (d.endAngle + d.startAngle)/2 > Math.PI ? "end" : "start";
-        // })
-        .text(d => d.data);
 
+     this.drawLabels()   
+  }
 
-    
-    // const pointer = this.svg.append("g")
-    //   .attr("transform", `translate(${this.width / 2}, ${this.height / 2})`);
-    
+  private setLabelArcProps(labelArc: d3.Arc<any, d3.PieArcDatum<number>>, d: d3.PieArcDatum<number>): object {
+    return {
+      x: labelArc.centroid(d)[0],
+      y: labelArc.centroid(d)[1],
+      side: (d.endAngle + d.startAngle) / 2 > Math.PI ? "Left" : "Right"
+    };
+  }
 
-    // pointer.append("circle")
-    //   .attr("r", 5)
-    //   .attr("fill", "black");
+  private drawLabels() {
+    // console.log('labelStartPositionMap---', this.labelStartPositionMap);
+    // console.log('labelEndPositionMap---', this.labelEndPositionMap);
+    // delete all g with class{labelArc} 
+    this.svg.selectAll("g.labelArc").remove();
 
-    // pointer.append("line")
-    //   .attr("x1", 0)
-    //   .attr("x2", 0)
-    //   .attr("y1", 0)
-    //   .attr("y2", -this.radius - 20)
-    //   .attr("stroke", "black")
-    //   .attr("stroke-width", 2);
+    // draw a g and inside that g draw a line using {this.labelStartPositionMap} and this.labelEndPositionMap
+    const labelLinesGroup = this.svg.selectAll("g.labelLine")
+      .data(Array.from(this.labelStartPositionMap.entries()))
+      .enter()
+      .append("g")
+      .attr("class", "labelLine");
+
+    labelLinesGroup.append("line")
+      .attr("x1", d => d[1]['x'])
+      .attr("y1", d => d[1]['y'])
+      .attr("x2", d => this.labelEndPositionMap.get(d[0])['x'])
+      .attr("y2", d => this.labelEndPositionMap.get(d[0])['y'])
+      .attr("stroke", (d, i) => this.colors(i.toString()))
+      .attr("stroke-width", 2);
+
+    // Draw a horizontal line on labelEndPositionMap
+    labelLinesGroup.append("line")
+      .attr("x1", d => this.labelEndPositionMap.get(d[0])['x'])
+      .attr("y1", d => this.labelEndPositionMap.get(d[0])['y'])
+      .attr("x2", d => {
+        const sideValue = this.labelEndPositionMap.get(d[0])['side'] === 'Left' ? -50 : 50;
+        return this.labelEndPositionMap.get(d[0])['x'] + sideValue
+      }) // Adjust the length of the horizontal line as needed
+      .attr("y2", d => this.labelEndPositionMap.get(d[0])['y'])
+      .attr("stroke", (d, i) => this.colors(i.toString()))
+      .attr("stroke-width", 2);
+
+      // Draw a vertical line in the middile of the above line
+      
+  // Draw a vertical line in the middle of the above line
+  labelLinesGroup.append("line")
+    .attr("x1", d => {
+      const sideValue = this.labelEndPositionMap.get(d[0])['side'] === 'Left' ? -50 : 50;
+      return this.labelEndPositionMap.get(d[0])['x'] + sideValue
+    })
+    .attr("y1", d => this.labelEndPositionMap.get(d[0])['y'] - 25)
+    .attr("x2", d => {
+      const sideValue = this.labelEndPositionMap.get(d[0])['side'] === 'Left' ? -50 : 50;
+      return this.labelEndPositionMap.get(d[0])['x'] + sideValue
+    })
+    .attr("y2", d => this.labelEndPositionMap.get(d[0])['y'] + 25) // Adjust the length of the vertical line as needed
+    .attr("stroke", (d, i) => this.colors(i.toString()))
+    .attr("stroke-width", 2);
   }
 }

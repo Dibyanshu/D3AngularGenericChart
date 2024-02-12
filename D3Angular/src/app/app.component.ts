@@ -34,7 +34,6 @@ export class AppComponent implements OnInit{
     this.radarChart = new RadarChart('#svgRadarContainer')
     this.radarChart.data(formatedChartData);
     this.radarChart.render();
-    console.log(this.radarChart);
   }
 
   loadPieChart() {
@@ -43,7 +42,6 @@ export class AppComponent implements OnInit{
       { label: 'Completely picked', value: 1428 }
     ];
     const pieChart = new PieChart('#svgPieContainer', pieChartData, {chartType: 'pie', arcScalingEnable: true, arcScalingIndex: 0});
-    console.log(pieChart);
   }
 
   loadDonutChart() {
@@ -53,7 +51,6 @@ export class AppComponent implements OnInit{
       { label: 'In progress', value: 390 }
     ];
     const pieChart = new PieChart('#svgDonutContainer', pieChartData, {chartType: 'donut', innerRadius: 170});
-    console.log(pieChart);
   }
 
   public open(modal: any): void {
