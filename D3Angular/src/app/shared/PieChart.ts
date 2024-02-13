@@ -31,18 +31,18 @@ export class PieChart {
   private chartOptions: PieOptions;
   private chartOptionDefault: PieOptions = {
     colors: ['#e7a988', '#c9562b', '#8b3215'],
-    height: 600,
-    innerRadius: 0,
-    radius: 200,
-    radiusGutter: 80,
-    pieToLabelGap: 200,
-    lineToTextGap: 14,
-    seconLineWidth: 30,
-    width: 600,
-    arcScalingEnable: false,
-    arcScalingIndex: 0,
-    chartType: 'pie',
-    dataSortingEnabled: false
+    height: 600, // height of the pie chart
+    innerRadius: 0, // inner radius of the donut chart
+    radius: 200, // radius of the pie chart
+    radiusGutter: 80, // gap between the pie chart and the label~this is used to calculate the position of the label by drawing another pie
+    pieToLabelGap: 180, // gap between the pie chart and the label~this is used to calculate the position of the label by drawing another pie
+    lineToTextGap: 14, // gap between the label arrow line and the text
+    seconLineWidth: 30, // length of the horizontal line
+    width: 640, // width of the pie chart
+    arcScalingEnable: false, // enable the scaling of the arc~specific case for the pie chart 
+    arcScalingIndex: 0, // index of the arc to be scaled upp~specific case for the pie chart
+    chartType: 'pie', // 'pie' | 'donut'
+    dataSortingEnabled: false // enable the sorting of the data~not used for now 
   };
   private arcs: d3.Selection<SVGGElement, d3.PieArcDatum<number>, SVGGElement, unknown>;
   private arc: d3.Arc<any, d3.PieArcDatum<number>>;
@@ -190,25 +190,23 @@ export class PieChart {
       .attr("y2", d => this.labelEndPositionMap.get(d[0])['y'])
       .attr("stroke", (d, i) => this.colors(i.toString()))
       .attr("stroke-width", 2);
-
-      // Draw a vertical line in the middile of the above line
       
-  // Draw a vertical line in the middle of the above line
-  labelLinesGroup.append("line")
-    .attr("x1", d => {
-      const sideValue = this.labelEndPositionMap.get(d[0])['side'] === 'Left' ?
-        -this.chartOptions.seconLineWidth : this.chartOptions.seconLineWidth;
-      return this.labelEndPositionMap.get(d[0])['x'] + sideValue
-    })
-    .attr("y1", d => this.labelEndPositionMap.get(d[0])['y'] - this.chartOptions.seconLineWidth/2)
-    .attr("x2", d => {
-      const sideValue = this.labelEndPositionMap.get(d[0])['side'] === 'Left' ?
-        -this.chartOptions.seconLineWidth : this.chartOptions.seconLineWidth;
-      return this.labelEndPositionMap.get(d[0])['x'] + sideValue
-    })
-    .attr("y2", d => this.labelEndPositionMap.get(d[0])['y'] + this.chartOptions.seconLineWidth/2) // Adjust the length of the vertical line as needed
-    .attr("stroke", (d, i) => this.colors(i.toString()))
-    .attr("stroke-width", 2);
+    // Draw a vertical line in the middle of the above line
+    labelLinesGroup.append("line")
+      .attr("x1", d => {
+        const sideValue = this.labelEndPositionMap.get(d[0])['side'] === 'Left' ?
+          -this.chartOptions.seconLineWidth : this.chartOptions.seconLineWidth;
+        return this.labelEndPositionMap.get(d[0])['x'] + sideValue
+      })
+      .attr("y1", d => this.labelEndPositionMap.get(d[0])['y'] - this.chartOptions.seconLineWidth/2)
+      .attr("x2", d => {
+        const sideValue = this.labelEndPositionMap.get(d[0])['side'] === 'Left' ?
+          -this.chartOptions.seconLineWidth : this.chartOptions.seconLineWidth;
+        return this.labelEndPositionMap.get(d[0])['x'] + sideValue
+      })
+      .attr("y2", d => this.labelEndPositionMap.get(d[0])['y'] + this.chartOptions.seconLineWidth/2) // Adjust the length of the vertical line as needed
+      .attr("stroke", (d, i) => this.colors(i.toString()))
+      .attr("stroke-width", 2);
   }
 
   private drawLabels(data: PieChartData[]): void {
@@ -220,8 +218,10 @@ export class PieChart {
       .attr("class", "label-group")
       .attr("transform", (d, i) => {
         const position = this.labelEndPositionMap.get(i);
-        const sideValue = position['side'] === 'Left' ? -(this.chartOptions.seconLineWidth + 80) : this.chartOptions.seconLineWidth;
-        const gapValue = position['side'] === 'Left' ? -this.chartOptions.lineToTextGap : this.chartOptions.lineToTextGap;
+        console.log(d.label, i, this.labelEndPositionMap.get(i)['side']);
+        const sideValue = position['side'] === 'Left' ? -(this.chartOptions.seconLineWidth + 65) : this.chartOptions.seconLineWidth;
+        const gapValue = position['side'] === 'Left' ?
+          -this.textGroupXAdjustmentWRTLines(d.label) : this.chartOptions.lineToTextGap;
         return `translate(${position['x'] + gapValue + sideValue}, ${position['y']})`;
       })
       .append("text")
@@ -231,30 +231,39 @@ export class PieChart {
         return position['side'] === 'Left' ? "left" : "right";
       })
       .attr("dy", "2px")
-      .style("font-size", "24px")
+      .attr("x", (d, i, nodes) => {
+        debugger
+        const position = this.labelEndPositionMap.get(i);
+        return position['side'] === 'Left' ?
+          d3.select(nodes[i]).node().getBBox().width + this.textGroupXAdjustmentWRTLines(d.label) - 10 : 0;
+      })
+      .style("font-size", "22px")
       .style("fill", "black");
 
     this.svg.selectAll("g.label-group")
       .append("text")
       .text(d => `${d['label']}`)
-      .attr("text-anchor", (d, i) => {
-        const position = this.labelEndPositionMap.get(i);
-        return position['side'] === 'Left' ? "left" : "right";
-      })
       .attr("dy", "15px")
       .style("font-size", "14px")
-      .style("fill", "gray");
+      .style("fill", "black");
+  }
 
-    // Update with of text based on the length of the text
-    // this.svg.selectAll("g.label-group text")
-    //   .attr("x", (d, i, nodes) => {
-    //     const position = this.labelEndPositionMap.get(i);
-    //     debugger
-    //     // console.log(nodes[i].clientWidth);
-    //     // const sideValue = position['side'] === 'Left' ? -nodes[i].getBBox().width : 0;
-    //     const sideValue = position['side'] && position['side'] === 'Left' ? -nodes[i]['clientWidth']: 0;
-    //     return sideValue;
-    //   });
+/**
+ * The function calculates the adjustment width for a text label based on the width of the label and a
+ * predefined gap value with respect to label lines.
+ * @param {string} label - The `label` parameter is a string that represents the text label for a
+ * chart.
+ * @returns the adjusted width value, which is a number.
+ */
+  textGroupXAdjustmentWRTLines(label: string): number {
+    let adjustedWidth = this.chartOptions.lineToTextGap;
+    const text = this.svg.append("text").text(label);
+    const width = text.node().getBBox().width;
+    text.remove();
+    if (width > 100) {
+      adjustedWidth = width - 65;
+    }
+    return adjustedWidth;
   }
   
 /**
