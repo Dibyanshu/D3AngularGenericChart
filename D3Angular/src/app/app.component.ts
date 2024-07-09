@@ -4,6 +4,7 @@ import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RadarChart } from './shared/RadarChart';
 import { RadarChartFakeData } from './data/radarChartFake.data';
 import { PieChart, PieChartData } from './shared/PieChart';
+import { LineChart, LineChartData } from './shared/LineChart';
 
 @Component({
   selector: 'app-root',
@@ -26,7 +27,20 @@ export class AppComponent implements OnInit{
 
       this.loadPieChart();
       this.loadDonutChart();
+
+      this.loadLineChart();
     }, 1000);
+  }
+
+  loadLineChart() {
+    const lineChartData: LineChartData[] = [
+      { label: 'CMI', value: 4.20 },
+      { label: 'CHS', value: 50 },
+      { label: 'ABQ', value: 58 },
+      { label: 'LAS', value: 77 },
+      { label: 'GGG', value: 98 }
+    ];
+    new LineChart('#svgLineContainer', lineChartData);
   }
 
   loadRadarChart(chartData: Array<{ axisSet: Array<{ axis: string, value: number }> }>) {
@@ -38,8 +52,9 @@ export class AppComponent implements OnInit{
 
   loadPieChart() {
     const pieChartData: PieChartData[] = [
-      { label: 'Pick in progress', value: Math.floor(Math.random() * 1000) },
-      { label: 'Completely picked', value: Math.floor(Math.random() * 1000) }
+      { label: 'Completed', value: Math.floor(Math.random() * 1000) },
+      { label: 'To be recieved', value: Math.floor(Math.random() * 1000) },
+      { label: 'In progress', value: Math.floor(Math.random() * 1000) }
     ];
     new PieChart('#svgPieContainer', pieChartData, {chartType: 'pie', arcScalingEnable: true, arcScalingIndex: 0});
   }

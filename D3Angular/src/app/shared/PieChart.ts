@@ -232,7 +232,6 @@ export class PieChart {
       })
       .attr("dy", "2px")
       .attr("x", (d, i, nodes) => {
-        debugger
         const position = this.labelEndPositionMap.get(i);
         return position['side'] === 'Left' ?
           d3.select(nodes[i]).node().getBBox().width + this.textGroupXAdjustmentWRTLines(d.label) - 10 : 0;
