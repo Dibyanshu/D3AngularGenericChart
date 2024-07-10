@@ -34,11 +34,11 @@ export class AppComponent implements OnInit{
 
   loadLineChart() {
     const lineChartData: LineChartData[] = [
-      { label: 'CMI', value: 4.20 },
+      { label: 'CMI', value: 2.20 },
       { label: 'CHS', value: 50 },
       { label: 'ABQ', value: 58 },
       { label: 'LAS', value: 77 },
-      { label: 'GGG', value: 98 }
+      { label: 'GGG', value: 32 }
     ];
     new LineChart('#svgLineContainer', lineChartData);
   }
