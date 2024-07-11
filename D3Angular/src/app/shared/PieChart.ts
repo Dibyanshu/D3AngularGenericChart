@@ -218,7 +218,7 @@ export class PieChart {
       .attr("class", "label-group")
       .attr("transform", (d, i) => {
         const position = this.labelEndPositionMap.get(i);
-        console.log(d.label, i, this.labelEndPositionMap.get(i)['side']);
+        // console.log(d.label, i, this.labelEndPositionMap.get(i)['side']);
         const sideValue = position['side'] === 'Left' ? -(this.chartOptions.seconLineWidth + 65) : this.chartOptions.seconLineWidth;
         const gapValue = position['side'] === 'Left' ?
           -this.textGroupXAdjustmentWRTLines(d.label) : this.chartOptions.lineToTextGap;
