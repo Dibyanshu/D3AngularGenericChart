@@ -4,7 +4,7 @@ import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RadarChart } from './shared/RadarChart';
 import { RadarChartFakeData } from './data/radarChartFake.data';
 import { PieChart, PieChartData } from './shared/PieChart';
-import { LineChart, LineChartData } from './shared/LineChart';
+import { LineChart, LineChartData, LineChartGroupData } from './shared/LineChart';
 
 @Component({
   selector: 'app-root',
@@ -33,16 +33,45 @@ export class AppComponent implements OnInit{
   }
 
   loadLineChart() {
-    const lineChartData: LineChartData[] = [
-      { labelBottom: 'CMI', value: 2.20 },
-      { labelBottom: 'CHS', value: 50 },
-      { labelBottom: 'ABQ', value: 58 },
-      { labelBottom: 'LAS', value: 77 },
-      { labelBottom: 'GGG', value: 32 },
-      { labelBottom: 'SAN', value: 99 },
-      { labelBottom: 'TUL', value: 12 }
+    type APIResponseData = {
+      data: {
+        value: number;
+        staionOrStore: string;
+        region: string;
+        isFocusLocation: boolean;
+      }[];
+      groupName: string;      
+    }
+    const isdLineData: LineChartData[] = [
+      { labelBottom: 'CMI', value: 2.20, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'CHS', value: 50, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'ABQ', value: 58, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'LAS', value: 77, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'GGG', value: 32, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'SAN', value: 99, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'TUL', value: 64.61, isComparison: false, labelTop: 'NRCC#1' }
     ];
-    new LineChart('#svgLineContainer', lineChartData);
+    const cycleData: LineChartData[] = [
+      { labelBottom: 'CMI', value: 76.38, isComparison: false, labelTop: 'NRCC#1'},
+      { labelBottom: 'CHS', value: 79.37, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'ABQ', value: 96.35, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'LAS', value: 97.58, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'GGG', value: 76.68, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'SAN', value: 96.68, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'TUL', value: 64.61, isComparison: false, labelTop: 'NRCC#1' }
+    ];
+    const lineChartGroupData: LineChartGroupData[] = [
+      { groupLabel: 'ISD', groupColor: '#B02A4C', data: isdLineData },
+      { groupLabel: '8 Week Avg', groupColor: '#0F0E38', data: cycleData },
+    ];
+    const lineChartGroupDataUpdated: LineChartGroupData[] = [
+      { groupLabel: 'ISD', groupColor: '#B02A4C', data: isdLineData },
+      { groupLabel: '8 Week Avg', groupColor: '#0F0E38', data: cycleData },
+    ];
+    let dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupData);
+    console.log('::dtsLeg3LineChart.groupData::',dtsLeg3LineChart.groupData);
+    dtsLeg3LineChart.groupData = lineChartGroupDataUpdated;
+    dtsLeg3LineChart.render(true);
   }
 
   loadRadarChart(chartData: Array<{ axisSet: Array<{ axis: string, value: number }> }>) {
