@@ -52,7 +52,7 @@ export class LineChart {
     private height: number;
     private width: number;
     private svgElem: d3.Selection<SVGGElement, unknown, null, undefined>;
-    private chartShiftX: number = 30;
+    private chartShiftX: number = 60;
     private groupColor: LineChartColors = {
         lineColor: '#B02A4C',
         areaColor: '#F9EEF1CC',
@@ -190,7 +190,7 @@ export class LineChart {
             .selectAll('circle.dots')
             .data(lineData)
             .enter().append('circle')
-            .attr("cx", posX)
+            .attr("cx", posX) // minus it's width
             .attr("cy", posY)
             .attr('r', 6)
             .style("stroke", this.groupColor.dotColor)
@@ -264,6 +264,20 @@ export class LineChart {
         // select all axis and cjange color
         this.svgElem.select('.x-axis').selectAll("path").style("stroke", "#ddd").style("stroke-width", "2px");
         this.svgElem.select('.y-axis').selectAll("path").style("stroke", "#ddd").style("stroke-width", "2px");
+
+        // get the x-axis path and clone it and append it. Increase the width of the path
+        this.svgElem.select('.x-axis').select("path").clone()
+            .attr("transform", `translate(-${this.chartShiftX}, 0)`)
+            .style("stroke-width", 2)
+            .style("stroke", "#ddd");
+        this.svgElem.select('.x-axis').select("path").clone()
+            .attr("transform", `translate(${this.chartShiftX*2}, 0)`)
+            .style("stroke-width", 2)
+            .style("stroke", "#ddd");
+        this.svgElem.select('.y-axis').select("path").clone()
+            .attr("transform", `translate(0, -${this.chartShiftX*2})`)
+            .style("stroke-width", 2)
+            .style("stroke", "#ddd");
     }
 
     /**
@@ -318,7 +332,7 @@ export class LineChart {
     }
 
     private getPositionXY(xScale: d3.ScaleLinear<number, number, never>, yScale: d3.ScaleLinear<number, number, never>, lineData: LineChartData[]) {
-        const posX = (_, i) => (xScale(i) + (this.width + this.chartOptions.margin.left) / lineData.length / 2) - 42; // 42 hardcoded value for the dot position
+        const posX = (_, i) => (xScale(i) + (this.width + this.chartOptions.margin.left) / lineData.length / 2) - (21 + this.chartShiftX/3); // 42 hardcoded value for the dot position
         const posY = (d, _) => yScale(d.value);
         return { posX, posY };
     }
