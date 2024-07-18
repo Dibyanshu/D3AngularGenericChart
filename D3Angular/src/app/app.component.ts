@@ -4,7 +4,7 @@ import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RadarChart } from './shared/RadarChart';
 import { RadarChartFakeData } from './data/radarChartFake.data';
 import { PieChart, PieChartData } from './shared/PieChart';
-import { LineChart, LineChartData, LineChartGroupData } from './shared/LineChart';
+import { LineChart, LineChartData, LineChartGroupData, LineOptions } from './shared/LineChart';
 import { lineChartUpdateData1, lineChartUpdateData2 } from './data/lineChartFake.data';
 
 @Component({
@@ -106,7 +106,15 @@ export class AppComponent implements OnInit{
         data: lineChartUpdateData2 
       },
     ];
-    let dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupData);
+    const lineChartOption: LineOptions = {
+      margin: { top: 50, right: 20, bottom: 30, left: 50 },
+      legendData: [
+        { label: 'ISD (06/24/2024)', color: '#0F0E38' },
+        { label: '8 week avg.', color: '#B02A4C' },
+        { label: 'Goal', color: '#628AB3'}
+      ]
+    }
+    let dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupData, lineChartOption);
     // console.log('::dtsLeg3LineChart.groupData::',dtsLeg3LineChart.groupData);
     /*
     dtsLeg3LineChart.groupData = lineChartGroupDataUpdated;

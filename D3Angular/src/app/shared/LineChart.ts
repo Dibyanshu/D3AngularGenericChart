@@ -8,6 +8,11 @@ export type LineOptions = {
         targetValue: number;
         targetColor: string;
     };
+    isAutoScale?: boolean;
+    legendData:{
+            label: string;
+            color: string;
+        }[];
 };
 export type LineChartData = {
     labelBottom: string;
@@ -19,11 +24,10 @@ export type LineChartData = {
 export type LineChartGroupData = {
     groupId: string; // unique id for the group @patern: [a-zA-Z0-9_]
     groupLabel: string;
-    groupColor: ChartColors;
+    groupColor: LineChartColors;
     data: LineChartData[];
 };
-
-type ChartColors = {
+export type LineChartColors = {
     lineColor: string;
     areaColor: string; // area fill color will be gradient with secondary color as white
     dotColor: string;
@@ -38,14 +42,18 @@ export class LineChart {
 
     private container: string;
     private defaultOptions: LineOptions = {
-        margin: { top: 20, right: 20, bottom: 30, left: 50 }
+        margin: { top: 20, right: 20, bottom: 30, left: 50 },
+        legendData: [
+            { label: 'ISD', color: '#0F0E38' },
+            { label: 'Cycle', color: '#B02A4C' }
+        ]
     };
     private chartOptions: LineOptions;
     private height: number;
     private width: number;
     private svgElem: d3.Selection<SVGGElement, unknown, null, undefined>;
-    private chartShiftX: number = 20;
-    private groupColor: ChartColors = {
+    private chartShiftX: number = 30;
+    private groupColor: LineChartColors = {
         lineColor: '#B02A4C',
         areaColor: '#F9EEF1CC',
         dotColor: '#B02A4C'
@@ -78,7 +86,7 @@ export class LineChart {
 
         // Remove existing chart if it exists
         if(isInterim){
-            this.drawLines();
+            this.drawChartLines();
             return;
         }
         if (document.querySelector(`${this.container} > .chartWrapperG`)) {
@@ -97,12 +105,12 @@ export class LineChart {
         this.dropShadowFilter();
         this.addLabels();
         
-        this.drawLines();
+        this.drawChartLines();
         // Add grid lines
         this.addHetchingLines();
     }
 
-    private drawLines() {
+    private drawChartLines() {
         /*
         * @Limitation: due to the multiple area fill gradient, 
         * we need to draw the higher x-axis value area first and then the lower x-axis value area
@@ -125,6 +133,36 @@ export class LineChart {
          */
         const { yScale, xScale } = this.getScalesXY(this.groupData[0].data);
         this.drawAxes(xScale, yScale, this.groupData[0].data);
+        this.drawLegends(xScale, yScale, this.chartOptions.legendData);
+    }
+
+    private drawLegends(xScale: d3.ScaleLinear<number, number, never>, yScale: d3.ScaleLinear<number, number, never>, legendData: { label: string; color: string; }[]) {
+        // Add circular legends below x-axis
+        if (this.svgElem.select(".legendWrapper").node()) {
+            this.svgElem.select(".legendWrapper").remove();
+        }
+        const legendWrapper = this.svgElem.append("g")
+            .attr("class", "legendWrapper");
+            const spaceBetweenLegends = 140;
+        legendData.forEach((legend, index) => {
+            legendWrapper.append("circle")
+                .attr("cx", index * spaceBetweenLegends)
+                .attr("cy", 0)
+                .attr("r", 6)
+                .style("stroke", this.groupColor.dotColor)
+                .style("stroke-width", "2px")
+                .style('fill', 'white')
+                .style("filter", "url(#drop-shadow)")
+            legendWrapper.append("text")
+                .attr("x", index * spaceBetweenLegends + 16)
+                .attr("y", 5)
+                .text(legend.label)
+                .style("font-size", "14px")
+                .style("fill", "#000000");
+        });
+        // center align the legendWrapper group
+        const bbox = legendWrapper.node().getBBox();
+        legendWrapper.attr("transform", `translate(${this.width / 2 - bbox.width / 2}, ${this.height + this.chartOptions.margin.top + 15})`);
     }
 
     private getScalesXY(lineData: LineChartData[]): { yScale: d3.ScaleLinear<number, number, never>; xScale: d3.ScaleLinear<number, number, never>; }{
@@ -146,16 +184,14 @@ export class LineChart {
         .y(d => yScale(d.value));
     }
 
-    private drawDots(posX: any, posY: any, dotSize: any, chartWrapperG: any, lineData: LineChartData[]) {
+    private drawDots(posX: any, posY: any, chartWrapperG: any, lineData: LineChartData[]) {
         chartWrapperG.append("g")
             .attr("class", "dotsWrapper")
             .selectAll('circle.dots')
             .data(lineData)
             .enter().append('circle')
-            .attr("class", "dots")
             .attr("cx", posX)
             .attr("cy", posY)
-            .attr("r", dotSize)
             .attr('r', 6)
             .style("stroke", this.groupColor.dotColor)
             .style("stroke-width", "2px")
@@ -176,12 +212,12 @@ export class LineChart {
         if (this.svgElem.select(".x-axis").node() && this.svgElem.select(".y-axis").node()) {
             return;
         }
-
+        // increase the xScale range by {this.chartShiftX} to shift the x-axis to the right
+        xScale.range([this.chartShiftX, this.width + this.chartShiftX]);
         const xAxisGen = d3.axisBottom(xScale);
-        // while generating the ticks, we need to shift the ticks
         xAxisGen.ticks(lineData.length);
         xAxisGen.tickSize(0);
-        xAxisGen.tickPadding(10);
+        xAxisGen.tickPadding(25);
         // array of labels extract from data
         xAxisGen.tickFormat((d, i) => lineData[i].labelBottom);
         
@@ -194,28 +230,25 @@ export class LineChart {
             .call(xAxisGen);
 
         // select all tick class inside x-axis and get data from the tick and append text
-        // get the translate value from the tick and set the text position
-        const thisRef = this;
+        //  rotate based on the data length {hardcoded value 15}
+        const textRotation = lineData.length > 15 ? -45 : 0;
         this.svgElem.select('.x-axis').selectAll(".tick").append("text").data(lineData)
             .text(d => d.labelTop)
-            .attr("dy", "1.5em").attr("dx", "-1em")
-            // get the translate value from the tick and set the text position
-            // .attr("transform", function(d, i) {
-            //     const tickAsParent = d3.select((this.parentNode as any));
-            //     const tick = d3.select((tickAsParent as any)).node();
-            //     const xTranslate = tick.attr("transform").split("(")[1].split(",")[0];
-            //     return "translate(" + xTranslate + ", "+ -thisRef.height +")";
-            // })
-            // .attr("transform", "rotate(-45)" + "translate("+  + ", 0)"); // check this line
-        // this.svgElem.select('.x-axis').selectAll(".tick").append("text")
-        //     .attr("dy", "1.5em").attr("dx", "-1em").attr("transform", "rotate(-45)")
-        //     .text(d => d);
+            .style("fill", "black")
+            .attr("y", -10)
+            .attr("transform", `translate(24, -${this.height+10}) rotate(${textRotation})`);
 
         const yAxisGen = d3.axisLeft(yScale);
-        yAxisGen.tickValues([0, 20, 40, 60, 80, 100]);
+        // if autoScale is enabled then the ticks should be calculated based on the data
+        if (this.chartOptions.isAutoScale) {
+            yAxisGen.ticks(5);
+        }
+        else{
+            yAxisGen.tickValues([0, 20, 40, 60, 80, 100]);
+        }
         // yAxisGen fontSize
         yAxisGen.tickFormat(d => `${d}%`);
-        yAxisGen.tickPadding(10);
+        yAxisGen.tickPadding(25);
         
         yAxisGen.tickSize(0);
 
@@ -230,6 +263,9 @@ export class LineChart {
         this.svgElem.select('.y-axis').selectAll("path").style("stroke", "#ddd").style("stroke-width", "2px");
     }
 
+    /**
+     * The function adds dashed horizontal lines to the x-axis ticks in an SVG element.
+     */
     private addHetchingLines() {
         this.svgElem.selectAll(".x-axis .tick line")
             .attr("y1", -this.height)
@@ -264,21 +300,17 @@ export class LineChart {
 
     }
 
+    /**
+     * Appends a text element to the SVG element for displaying y-axis plot label
+     */
     private addLabels() {
-        // Add labels
-        // Create circular legend
-
-        // this.svgElem.append("text")
-        //     .attr("transform", `translate(${this.width / 2}, ${this.height + this.chartOptions.margin.top + 10})`)
-        //     .style("text-anchor", "middle")
-        //     .text("X-axis Label");
-
         this.svgElem.append("text")
             .attr("transform", "rotate(-90)")
             .attr("y", 0 - this.chartOptions.margin.left*2)
             .attr("x", 0 - (this.height / 2))
             .attr("dy", "1em")
             .style("text-anchor", "middle")
+            .style("fill", "#8B8B8B")
             .text("% of Current ISD Delivered");
     }
 
@@ -288,6 +320,12 @@ export class LineChart {
         return { posX, posY };
     }
 
+    /**
+     * Appends an SVG path element with specified attributes to a given chart
+     * wrapper SVG group.
+     * @param chartWrapperG - The `chartWrapperG` parameter is a selection representing a `<g>` (group)
+     * element in an SVG chart.
+     */
     private drawEmptyPath(chartWrapperG: d3.Selection<SVGGElement, unknown, HTMLElement, any>) {
         chartWrapperG
             .append("path")
@@ -337,15 +375,16 @@ export class LineChart {
         // Draw an area based on the lineData
         this.drawArea(singleLineWrapperG, lineData, xScale, yScale);
         this.updatePath(line, lineData, singleLineWrapperG);
-        this.drawDots(posX, posY, 5, singleLineWrapperG, lineData);
+        this.drawDots(posX, posY, singleLineWrapperG, lineData);
     }
 
-    // add defs for the vertical gradient
+    /**
+     * Adds linear gradients to SVG elements based on group data.
+     */
     private addLinearGradient() {
         // Add linear gradient based on groupData length
         const defs = this.svgElem.append("defs");
         this.groupData.forEach((group, index) => {
-            console.log('::group::',group);
             const linearGradient = defs.append("linearGradient")
                 .attr("id", `area-gradient-${group.groupId}`)
                 .attr("gradientUnits", "userSpaceOnUse")
@@ -363,6 +402,9 @@ export class LineChart {
         });
     }
 
+    /**
+     * Creates a drop shadow filter effect using SVG filters.
+     */
     private dropShadowFilter() {
         const defs = this.svgElem.select("defs");
         let dropShadowFilter = defs.append('svg:filter')
@@ -381,8 +423,8 @@ export class LineChart {
         .attr('result', 'color-out');
         dropShadowFilter.append('svg:feOffset')
         .attr('in', 'color-out')
-        .attr('dx', 3)
-        .attr('dy', 3)
+        .attr('dx', 0)
+        .attr('dy', 0)
         .attr('result', 'the-shadow');
         dropShadowFilter.append('svg:feBlend')
         .attr('in', 'SourceGraphic')
