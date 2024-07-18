@@ -17,18 +17,26 @@ export type LineChartData = {
     isComparison: boolean;
 };
 export type LineChartGroupData = {
+    groupId: string; // unique id for the group @patern: [a-zA-Z0-9_]
     groupLabel: string;
-    groupColor: string;
+    groupColor: ChartColors;
     data: LineChartData[];
 };
 
+type ChartColors = {
+    lineColor: string;
+    areaColor: string; // area fill color will be gradient with secondary color as white
+    dotColor: string;
+};
+
 export class LineChart {
-    private container: string;
     /*
     * @Constraint: The length of the data array should be the same for all the groups
     * @Constraint: For multiple lines X axis value should be same
     */
     groupData: LineChartGroupData[];
+
+    private container: string;
     private defaultOptions: LineOptions = {
         margin: { top: 20, right: 20, bottom: 30, left: 50 }
     };
@@ -37,6 +45,12 @@ export class LineChart {
     private width: number;
     private svgElem: d3.Selection<SVGGElement, unknown, null, undefined>;
     private chartShiftX: number = 20;
+    private groupColor: ChartColors = {
+        lineColor: '#B02A4C',
+        areaColor: '#F9EEF1CC',
+        dotColor: '#B02A4C'
+    };
+    private groupKey: string = 'groupId';
 
     constructor(container: string, groupData:LineChartGroupData[], options?: LineOptions) {
         this.chartOptions = { ...this.defaultOptions, ...options };
@@ -45,6 +59,15 @@ export class LineChart {
         this.render();
     }
 
+    /**
+     * Renders a chart within a specified container element, handling
+     * dimensions, margins, and various chart options.
+     * @param {boolean} [isInterim] - It indicates whether the rendering process is interim or not. If `isInterim` is `true`,
+     * the function will return without performing the rendering actions, essentially skipping the
+     * rendering process. This can be useful in scenarios
+     * @returns If the `isInterim` parameter is true, the `render` function will return without performing
+     * any further actions.
+     */
     public render(isInterim?: boolean) {
         // Select the container element
         const containerElement = document.querySelector(this.container);
@@ -55,6 +78,7 @@ export class LineChart {
 
         // Remove existing chart if it exists
         if(isInterim){
+            this.drawLines();
             return;
         }
         if (document.querySelector(`${this.container} > .chartWrapperG`)) {
@@ -88,6 +112,8 @@ export class LineChart {
             return d3.max(a.data, d => d.value) - d3.max(b.data, d => d.value);
         });
         this.groupData.forEach((group, index) => {
+            this.groupColor = group.groupColor;
+            this.groupKey = group.groupId;
             this.updateChart(group.data, index);
         });
 
@@ -131,7 +157,7 @@ export class LineChart {
             .attr("cy", posY)
             .attr("r", dotSize)
             .attr('r', 6)
-            .style("stroke", "#B02A4C")
+            .style("stroke", this.groupColor.dotColor)
             .style("stroke-width", "2px")
             .style('fill', 'white')
             .style("filter", "url(#drop-shadow)")
@@ -221,7 +247,7 @@ export class LineChart {
         .attr("class", "line")
         .style("stroke-width", 2)
         .style("fill", "none")
-        .style("stroke", "#B02A4C")
+        .style("stroke", this.groupColor.lineColor)
         .attr("d", line);
 
         const pathLength = (updatedPath.node() as any).getTotalLength();
@@ -249,11 +275,11 @@ export class LineChart {
 
         this.svgElem.append("text")
             .attr("transform", "rotate(-90)")
-            .attr("y", 0 - this.chartOptions.margin.left)
+            .attr("y", 0 - this.chartOptions.margin.left*2)
             .attr("x", 0 - (this.height / 2))
             .attr("dy", "1em")
             .style("text-anchor", "middle")
-            .text("Y-axis Label");
+            .text("% of Current ISD Delivered");
     }
 
     private getPositionXY(xScale: d3.ScaleLinear<number, number, never>, yScale: d3.ScaleLinear<number, number, never>, lineData: LineChartData[]) {
@@ -287,7 +313,7 @@ export class LineChart {
             .datum(lineData)
             // .attr("fill", "#B02A4C")
             // add gradient to the area
-            .attr("fill", "url(#area-gradient)")
+            .attr("fill", "url(#area-gradient-" + this.groupKey + ")")
             // .attr("fill-opacity", 0.1)
             .style("opacity", 0)
             .transition()
@@ -300,9 +326,10 @@ export class LineChart {
 
     private updateChart(lineData: LineChartData[], lineIndex: number) {
         const singleLineWrapperG = d3.select(".chartWrapperG")
-        .append("g")
-        .attr("transform", `translate(${this.chartShiftX},0)`)
-        .attr("class", `lineWrapperG-${lineIndex}`);
+            .append("g")
+            .attr("transform", `translate(${this.chartShiftX},0)`)
+            .attr("class", `lineWrapperG-${lineIndex}`);
+
         this.drawEmptyPath(singleLineWrapperG);
         const { yScale, xScale } = this.getScalesXY(lineData);
         const { posX, posY } = this.getPositionXY(xScale, yScale, lineData);
@@ -315,21 +342,25 @@ export class LineChart {
 
     // add defs for the vertical gradient
     private addLinearGradient() {
+        // Add linear gradient based on groupData length
         const defs = this.svgElem.append("defs");
-        const linearGradient = defs.append("linearGradient")
-            .attr("id", "area-gradient")
-            .attr("gradientUnits", "userSpaceOnUse")
-            .attr("x1", 0).attr("y1", this.height)
-            .attr("x2", 0).attr("y2", 0);
-
-        linearGradient.selectAll("stop")
-            .data([
-                { offset: "0%", color: "#ffffff" },
-                { offset: "100%", color: "#7aafff" }
-            ])
-            .enter().append("stop")
-            .attr("offset", d => d.offset)
-            .attr("stop-color", d => d.color);
+        this.groupData.forEach((group, index) => {
+            console.log('::group::',group);
+            const linearGradient = defs.append("linearGradient")
+                .attr("id", `area-gradient-${group.groupId}`)
+                .attr("gradientUnits", "userSpaceOnUse")
+                .attr("x1", 0).attr("y1", this.height)
+                .attr("x2", 0).attr("y2", 0);
+    
+            linearGradient.selectAll("stop")
+                .data([
+                    { offset: "0%", color: "#ffffff" },
+                    { offset: "100%", color: group.groupColor.areaColor }
+                ])
+                .enter().append("stop")
+                .attr("offset", d => d.offset)
+                .attr("stop-color", d => d.color);
+        });
     }
 
     private dropShadowFilter() {

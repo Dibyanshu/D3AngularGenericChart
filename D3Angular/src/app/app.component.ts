@@ -5,6 +5,7 @@ import { RadarChart } from './shared/RadarChart';
 import { RadarChartFakeData } from './data/radarChartFake.data';
 import { PieChart, PieChartData } from './shared/PieChart';
 import { LineChart, LineChartData, LineChartGroupData } from './shared/LineChart';
+import { lineChartUpdateData1, lineChartUpdateData2 } from './data/lineChartFake.data';
 
 @Component({
   selector: 'app-root',
@@ -60,18 +61,59 @@ export class AppComponent implements OnInit{
       { labelBottom: 'SAN', value: 96.68, isComparison: false, labelTop: 'NRCC#1' },
       { labelBottom: 'TUL', value: 64.61, isComparison: false, labelTop: 'NRCC#1' }
     ];
+
     const lineChartGroupData: LineChartGroupData[] = [
-      { groupLabel: 'ISD', groupColor: '#B02A4C', data: isdLineData },
-      { groupLabel: '8 Week Avg', groupColor: '#0F0E38', data: cycleData },
+      { 
+        groupId: 'ISD',
+        groupLabel: 'ISD',
+        groupColor: {
+          lineColor: '#0F0E38',
+          areaColor: '#E6F0FFCC',
+          dotColor: '#0F0E38'
+        }, 
+        data: isdLineData 
+      },
+      { 
+        groupId: 'Cycle',
+        groupLabel: '8 Week Avg', 
+        groupColor: {
+          lineColor: '#B02A4C',
+          areaColor: '#F9EEF1CC',
+          dotColor: '#B02A4C'
+        },
+        data: cycleData 
+      },
     ];
     const lineChartGroupDataUpdated: LineChartGroupData[] = [
-      { groupLabel: 'ISD', groupColor: '#B02A4C', data: isdLineData },
-      { groupLabel: '8 Week Avg', groupColor: '#0F0E38', data: cycleData },
+      { 
+        groupId: 'ISD',
+        groupLabel: 'ISD', 
+        groupColor: {
+          lineColor: '#0F0E38',
+          areaColor: '#E6F0FFCC',
+          dotColor: '#0F0E38'
+        },
+        data: lineChartUpdateData1 
+      },
+      { 
+        groupId: 'Cycle',
+        groupLabel: '8 Week Avg', 
+        groupColor: {
+          lineColor: '#B02A4C',
+          areaColor: '#F9EEF1CC',
+          dotColor: '#B02A4C'
+        },  
+        data: lineChartUpdateData2 
+      },
     ];
     let dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupData);
-    console.log('::dtsLeg3LineChart.groupData::',dtsLeg3LineChart.groupData);
+    // console.log('::dtsLeg3LineChart.groupData::',dtsLeg3LineChart.groupData);
+    /*
     dtsLeg3LineChart.groupData = lineChartGroupDataUpdated;
-    dtsLeg3LineChart.render(true);
+    setTimeout(() => {
+      dtsLeg3LineChart.render(true);
+    }, 3000);
+    */
   }
 
   loadRadarChart(chartData: Array<{ axisSet: Array<{ axis: string, value: number }> }>) {
