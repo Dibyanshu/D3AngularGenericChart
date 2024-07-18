@@ -231,12 +231,15 @@ export class LineChart {
 
         // select all tick class inside x-axis and get data from the tick and append text
         //  rotate based on the data length {hardcoded value 15}
-        const textRotation = lineData.length > 15 ? -45 : 0;
+        const dataThresold = 15;
+        const textRotation = lineData.length > dataThresold ? -45 : 0;
+        const translateXVal = lineData.length > dataThresold ? 24 : 0;
+        const translateYVal = lineData.length > dataThresold ? this.height + 20 : this.height;
         this.svgElem.select('.x-axis').selectAll(".tick").append("text").data(lineData)
             .text(d => d.labelTop)
             .style("fill", "black")
             .attr("y", -10)
-            .attr("transform", `translate(24, -${this.height+10}) rotate(${textRotation})`);
+            .attr("transform", `translate(${translateXVal}, -${translateYVal}) rotate(${textRotation})`);
 
         const yAxisGen = d3.axisLeft(yScale);
         // if autoScale is enabled then the ticks should be calculated based on the data
