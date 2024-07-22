@@ -44,22 +44,22 @@ export class AppComponent implements OnInit{
       groupName: string;      
     }
     const isdLineData: LineChartData[] = [
-      { labelBottom: 'CMI', value: 2.20, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'CMI', value: 2, isComparison: false, labelTop: 'NRCC#1' },
       { labelBottom: 'CHS', value: 50, isComparison: false, labelTop: 'NRCC#1' },
       { labelBottom: 'ABQ', value: 58, isComparison: false, labelTop: 'NRCC#1' },
       { labelBottom: 'LAS', value: 77, isComparison: false, labelTop: 'NRCC#1' },
       { labelBottom: 'GGG', value: 32, isComparison: false, labelTop: 'NRCC#1' },
       { labelBottom: 'SAN', value: 99, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'TUL', value: 64.61, isComparison: false, labelTop: 'NRCC#1' }
+      { labelBottom: 'TUL', value: 65, isComparison: false, labelTop: 'NRCC#1' }
     ];
     const cycleData: LineChartData[] = [
-      { labelBottom: 'CMI', value: 76.38, isComparison: false, labelTop: 'NRCC#1'},
-      { labelBottom: 'CHS', value: 79.37, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'ABQ', value: 96.35, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'LAS', value: 97.58, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'GGG', value: 76.68, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'SAN', value: 96.68, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'TUL', value: 64.61, isComparison: false, labelTop: 'NRCC#1' }
+      { labelBottom: 'CMI', value: 76, isComparison: false, labelTop: 'NRCC#1'},
+      { labelBottom: 'CHS', value: 79, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'ABQ', value: 96, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'LAS', value: 97, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'GGG', value: 76, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'SAN', value: 96, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'TUL', value: 64, isComparison: false, labelTop: 'NRCC#1' }
     ];
 
     const lineChartGroupData: LineChartGroupData[] = [

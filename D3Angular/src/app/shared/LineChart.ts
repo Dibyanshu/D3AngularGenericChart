@@ -79,10 +79,11 @@ export class LineChart {
     public render(isInterim?: boolean) {
         // Select the container element
         const containerElement = document.querySelector(this.container);
+        const containerElemParent = document.querySelector(this.container).parentElement;
 
         // Set the dimensions and margins of the chart
-        this.width = containerElement.clientWidth - this.chartOptions.margin.left - this.chartOptions.margin.right;
-        this.height = 480 - this.chartOptions.margin.top - this.chartOptions.margin.bottom;
+        this.width = containerElemParent.clientWidth - this.chartOptions.margin.left - this.chartOptions.margin.right;
+        this.height = containerElemParent.clientHeight - this.chartOptions.margin.top - this.chartOptions.margin.bottom; 
 
         // Remove existing chart if it exists
         if(isInterim){
@@ -94,12 +95,15 @@ export class LineChart {
         }
         
         // Create the SVG element
+        const svgWidth = this.width + this.chartOptions.margin.left + this.chartOptions.margin.right + this.chartShiftX + this.chartOptions.margin.left*2; // to add the y-axis labels
+        const svgHeight = this.height + this.chartOptions.margin.top + this.chartOptions.margin.bottom + 60;
         this.svgElem = d3.select(containerElement)
-            .attr("width", this.width + this.chartOptions.margin.left + this.chartOptions.margin.right)
-            .attr("height", this.height + this.chartOptions.margin.top + this.chartOptions.margin.bottom)
+            .attr("width", containerElemParent.clientWidth - this.chartOptions.margin.left - this.chartOptions.margin.right)
+            .attr("height", svgHeight)
+            .attr("viewBox", `0 0 ${svgWidth} ${svgHeight}`)
             .append("g")
             .attr("class", "chartWrapperG")
-            .attr("transform", `translate(${this.chartOptions.margin.left}, ${this.chartOptions.margin.top})`);
+            .attr("transform", `translate(${this.chartOptions.margin.left+this.chartShiftX}, ${this.chartOptions.margin.top})`);
         
         this.addLinearGradient();
         this.dropShadowFilter();
@@ -198,7 +202,20 @@ export class LineChart {
             .style('fill', 'white')
             .style("filter", "url(#drop-shadow)")
             .attr("class", "dots");
-        chartWrapperG.selectAll("circle.dots")
+        // gets all the dots and do a for loop to get its data and append text
+        const that = this;
+        d3.selectAll("circle.dots").each(function(d, i){
+            // d3 select this and get its parent and append text
+            debugger;
+            d3.select((this as any).parentElement).append("text")
+                .text((d as any).value)
+                .attr("x", posX(d, i))
+                .attr("y", posY(d, i) - 10)
+                .style("text-anchor", "middle")
+                .style("fill", that.groupColor.dotColor);
+        });
+        
+        chartWrapperG.selectAll("circle.dots", "text")
             .style("opacity", 0)
             .transition()
             .delay(function(d,i){ return i * (2500/lineData.length); })
@@ -332,7 +349,7 @@ export class LineChart {
     }
 
     private getPositionXY(xScale: d3.ScaleLinear<number, number, never>, yScale: d3.ScaleLinear<number, number, never>, lineData: LineChartData[]) {
-        const posX = (_, i) => (xScale(i) + (this.width + this.chartOptions.margin.left) / lineData.length / 2) - (21 + this.chartShiftX/3); // 42 hardcoded value for the dot position
+        const posX = (_, i) => xScale(i);
         const posY = (d, _) => yScale(d.value);
         return { posX, posY };
     }
