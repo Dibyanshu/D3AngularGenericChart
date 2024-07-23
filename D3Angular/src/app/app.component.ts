@@ -17,6 +17,7 @@ import { lineChartUpdateData1, lineChartUpdateData2 } from './data/lineChartFake
 export class AppComponent implements OnInit{
   title = 'D3Angular';
   radarChart = null;
+  dtsLeg3LineChart: LineChart;
 
   constructor(private modalService: NgbModal) {
   }
@@ -30,7 +31,14 @@ export class AppComponent implements OnInit{
       this.loadDonutChart();
 
       this.loadLineChart();
+      // browser resixe event
+      window.addEventListener('resize', () => {
+        if (this.dtsLeg3LineChart) {
+          this.dtsLeg3LineChart.resize();
+        }
+      });
     }, 1000);
+
   }
 
   loadLineChart() {
@@ -108,13 +116,19 @@ export class AppComponent implements OnInit{
     ];
     const lineChartOption: LineOptions = {
       margin: { top: 50, right: 20, bottom: 30, left: 50 },
+      maxHeight: 600,
+      isTargetLine: true,
+      targetData: {
+        value: 98,
+        color: '#628AB3'
+      },
       legendData: [
         { label: 'ISD (06/24/2024)', color: '#0F0E38' },
         { label: '8 week avg.', color: '#B02A4C' },
         { label: 'Goal', color: '#628AB3'}
       ]
     }
-    let dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupData, lineChartOption);
+    this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupData, lineChartOption);
     // console.log('::dtsLeg3LineChart.groupData::',dtsLeg3LineChart.groupData);
     /*
     dtsLeg3LineChart.groupData = lineChartGroupDataUpdated;

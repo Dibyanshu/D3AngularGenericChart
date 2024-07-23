@@ -6,8 +6,8 @@ export type LineOptions = {
     isVHetchingLine?: boolean;
     isTargetLine?: boolean;
     targetData?: {
-        targetValue: number;
-        targetColor: string;
+        value: number;
+        color: string;
     };
     isAutoScale?: boolean;
     legendData:{
@@ -93,13 +93,17 @@ export class LineChart {
         
         this.addLinearGradient();
         this.dropShadowFilter();
-        this.addLabels();
         
         this.drawChartLines();
         // Add grid lines
         this.addHetchingLines();
     }
 
+    /**
+     * The function `updateSVGElem` updates the SVG element based on container dimensions and chart
+     * options, adjusting width & height based on it's immediate containetr.
+     * It can be called when the chart is resized or when the chart is first rendered.
+     */
     private updateSVGElem() {
         // Select the container element
         const containerElement = document.querySelector(this.container);
@@ -165,20 +169,29 @@ export class LineChart {
         this.drawAxes(xScale, yScale, this.groupData[0].data);
         this.drawLegends(xScale, yScale, this.chartOptions.legendData);
         // draw the goal single line and associated dots
-        this.drawGoalSection();
+        if(this.chartOptions.isTargetLine && this.chartOptions.targetData){
+            this.drawGoalSection();
+        }
     }
 
+    /**
+     * The `drawGoalSection` function in TypeScript creates a goal line chart with data points and
+     * animations.
+     */
     drawGoalSection() {
-        // throw new Error('Method not implemented.');
         // build goal data as LineChartData
+        if(d3.select(".lineWrapperG-goal").node()){
+            d3.select(".lineWrapperG-goal").remove();
+        }
         const goalData: LineChartData[] = [
             { labelBottom: 'Goal', value: 98, isComparison: false },
             { labelBottom: 'Goal', value: 98, isComparison: false }
         ];
         let singleLineWrapperG = d3.select(".chartWrapperG")
         const { yScale, xScale } = this.getScalesXY(goalData);
-        // const { posX, posY } = this.getPositionXY(xScale, yScale, goalData);
+        const { posX, posY } = this.getPositionXY(xScale, yScale, goalData);
         const goalLine = this.createLine(xScale, yScale);
+        const gutterVal = 11;
         /*
         * Line drawing
         */
@@ -187,31 +200,75 @@ export class LineChart {
             .append("path")
             .attr("class", "goal-line")
             .style("stroke-width", 2)
-            // .attr("transform", `translate(${this.chartOptions.margin.left},0)`)
+            .attr("transform", `translate(${this.chartOptions.margin.left + gutterVal},0)`)
             .attr("stroke-linejoin", "round")
             .attr("stroke-linecap", "round");
 
         const updatedPath = d3
-        .select(goalPath.node())
-        // .select("path")
-        .interrupt()
-        .datum(goalData)
-        .style("stroke-width", 2)
-        .style("fill", "none")
-        .style("stroke", this.groupColor.lineColor)
-        .attr("d", goalLine);
+            .select(goalPath.node())
+            // .select("path")
+            .interrupt()
+            .datum(goalData)
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .style("stroke", this.chartOptions.targetData.color)
+            .attr("d", goalLine);
 
         const pathLength = (updatedPath.node() as any).getTotalLength();
         const transitionPath = d3
-        .transition()
-        .ease(d3.easeSin)
-        .duration(2500);
+            .transition()
+            .ease(d3.easeSin)
+            .duration(2500);
         updatedPath
-        .attr("stroke-dashoffset", pathLength)
-        .attr("stroke-dasharray", pathLength)
-        .transition(transitionPath)
-        .attr("stroke-dashoffset", 0);
-        // this.drawDots(posX, posY, singleLineWrapperG, goalData);
+            .attr("stroke-dashoffset", pathLength)
+            .attr("stroke-dasharray", pathLength)
+            .transition(transitionPath)
+            .attr("stroke-dashoffset", 0);
+        /*
+        * Dot drawing
+        */
+        d3.select('.lineWrapperG-goal')
+            .selectAll('circle.dots')
+            .data(goalData)
+            .enter().append('circle')
+            .attr("cx", posX) // minus it's width
+            .attr("cy", posY)
+            .attr('r', 6)
+            .attr("transform", `translate(${this.chartOptions.margin.left + gutterVal},0)`) // temp fix
+            .style("stroke", this.chartOptions.targetData.color)
+            .style("stroke-width", "2px")
+            .style('fill', 'white')
+            .style("filter", "url(#drop-shadow)")
+            .attr("class", "dots");
+        // gets all the dots and do a for loop to get its data and append text
+        const that = this;
+        d3.select('.lineWrapperG-goal').selectAll("circle.dots").each(function(d, i){
+            let _posY = posY(d, i);
+            if((d as any).value > 96){
+                _posY += 20;
+            }
+            else{
+                _posY -= 10;
+            }
+            d3.select((this as any).parentElement).append("text")
+                .text((d as any).value + "%")
+                .attr("x", posX(d, i))
+                .attr("transform", `translate(${that.chartOptions.margin.left + gutterVal},0)`) // temp fix
+                .attr("y", _posY)
+                .style("text-anchor", "middle")
+                .style("font-size", "10px")
+                .style("fill", that.groupColor.dotColor);
+        });
+        
+        /*
+        singleLineWrapperG.selectAll("circle.dots")
+            .style("opacity", 0)
+            .transition()
+            .delay(function(d,i){ return i * (2500/goalData.length); })
+            .ease(d3.easeLinear)
+            .duration(2500)
+            .style("opacity", 1);
+        */
     }
 
     private drawLegends(xScale: d3.ScaleLinear<number, number, never>, yScale: d3.ScaleLinear<number, number, never>, legendData: { label: string; color: string; }[]) {
@@ -227,7 +284,7 @@ export class LineChart {
                 .attr("cx", index * spaceBetweenLegends)
                 .attr("cy", 0)
                 .attr("r", 6)
-                .style("stroke", this.groupColor.dotColor)
+                .style("stroke", legend.color)
                 .style("stroke-width", "2px")
                 .style('fill', 'white')
                 .style("filter", "url(#drop-shadow)")
@@ -235,7 +292,7 @@ export class LineChart {
                 .attr("x", index * spaceBetweenLegends + 16)
                 .attr("y", 5)
                 .text(legend.label)
-                .style("font-size", "14px")
+                .style("font-size", "12")
                 .style("fill", "#000000");
         });
         // center align the legendWrapper group
@@ -292,6 +349,7 @@ export class LineChart {
                 .attr("x", posX(d, i))
                 // minus it's height or plus it's height based on the value
                 .attr("y", _posY)
+                .style("font-size", "10px")
                 .style("text-anchor", "middle")
                 .style("fill", that.groupColor.dotColor);
         });
@@ -326,7 +384,7 @@ export class LineChart {
         // xAxisGenerator.tickSize(-this.height);
         this.svgElem.append("g")
             .attr("class", "x-axis")
-            .style("font-size", "14")
+            .style("font-size", "12")
             .attr("color", "#000000")
             .attr("transform", `translate(0, ${this.height})`)
             .call(xAxisGen);
@@ -340,6 +398,7 @@ export class LineChart {
         this.svgElem.select('.x-axis').selectAll(".tick").append("text").data(lineData)
             .text(d => d.labelTop)
             .style("fill", "black")
+            .style("font-size", "12")
             .attr("y", -10)
             .attr("transform", `translate(${translateXVal}, -${translateYVal}) rotate(${textRotation})`);
 
@@ -380,6 +439,8 @@ export class LineChart {
             .attr("transform", `translate(0, -${this.chartShiftX})`)
             .style("stroke-width", 2)
             .style("stroke", "#ddd");
+        
+        this.addLabels();
     }
 
     /**
@@ -422,13 +483,15 @@ export class LineChart {
      * Appends a text element to the SVG element for displaying y-axis plot label
      */
     private addLabels() {
-        this.svgElem.append("text")
+        d3.select(".y-axis").append("text")
             .attr("transform", "rotate(-90)")
             .attr("y", 0 - this.chartOptions.margin.left*2)
             .attr("x", 0 - (this.height / 2))
             .attr("dy", "1em")
+            .attr("class", "y-axis-label")
             .style("text-anchor", "middle")
             .style("fill", "#8B8B8B")
+            .style("font-size", "12")
             .text("% of ontime shipments");
     }
 
