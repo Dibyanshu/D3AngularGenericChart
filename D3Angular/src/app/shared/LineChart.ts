@@ -80,8 +80,11 @@ export class LineChart {
      * any further actions.
      */
     public render(isInterim?: boolean) {        
-        if(isInterim){
+        if(isInterim){ // not in use have to re-itirate
+            this.updateSVGElem();
+            this.coldRedraw = false;
             this.drawChartLines();
+            this.addHetchingLines();
             return;
         }
         // Remove existing chart if it exists
@@ -142,6 +145,7 @@ export class LineChart {
         this.coldRedraw = true;
         // Update the scales and redraw the chart
         this.drawChartLines();
+        this.addHetchingLines();
     }
 
     private drawChartLines() {
@@ -564,7 +568,7 @@ export class LineChart {
      */
     private addLinearGradient() {
         // Add linear gradient based on groupData length
-        const defs = this.svgElem.append("defs");
+        const defs = d3.select(`${this.container}`).append("defs");
         this.groupData.forEach((group, index) => {
             const linearGradient = defs.append("linearGradient")
                 .attr("id", `area-gradient-${group.groupId}`)
@@ -587,7 +591,8 @@ export class LineChart {
      * Creates a drop shadow filter effect using SVG filters.
      */
     private dropShadowFilter() {
-        const defs = this.svgElem.select("defs");
+        // improvement: check if defs already exists
+        const defs = d3.select(`${this.container}`).select("defs");
         let dropShadowFilter = defs.append('svg:filter')
         .attr('id', 'drop-shadow')
         .attr('filterUnits', "userSpaceOnUse")
