@@ -10,6 +10,7 @@ export type LineOptions = {
         color: string;
     };
     isAutoScale?: boolean;
+    groupDataHighestId?: string;
     legendData:{
         label: string;
         color: string;
@@ -20,7 +21,7 @@ export type LineChartData = {
     labelTop?: string;
     value: number;
     color?: string;
-    isComparison: boolean;
+    isComparison: boolean; // identifier to plot bold style hetching lines
 };
 export type LineChartGroupData = {
     groupId: string; // unique id for the group @patern: [a-zA-Z0-9_]
@@ -62,6 +63,9 @@ export class LineChart {
     };
     private groupKey: string = 'groupId';
     private coldRedraw: boolean; // to enable redraw of chart while resize
+    private dotLabelConvergenceRandomize = false;
+    dataRotationThresold: number = 6;
+    isDataSwaping: boolean = false;
 
     constructor(container: string, groupData:LineChartGroupData[], options?: LineOptions) {
         this.chartOptions = { ...this.defaultOptions, ...options };
@@ -154,9 +158,13 @@ export class LineChart {
         * we need to draw the higher x-axis value area first and then the lower x-axis value area
         * to avoid the overlapping of the area fill gradient 
         */
-        this.groupData = this.groupData.sort((a, b) => {
-            return d3.max(a.data, d => d.value) - d3.max(b.data, d => d.value);
-        });
+        if(this.isDataSwaping){
+            this.groupData = this.groupData.sort((a, b) => {
+                return d3.max(a.data, d => d.value) - d3.max(b.data, d => d.value);
+            });
+        }
+        // Draw an area based on the lineData
+        this.drawAreas(this.groupData);
         // Draw the lines for each group
         this.groupData.forEach((group, index) => {
             this.groupColor = group.groupColor;
@@ -176,6 +184,10 @@ export class LineChart {
         if(this.chartOptions.isTargetLine && this.chartOptions.targetData){
             this.drawGoalSection();
         }
+        // adjust the dot labels x and y position if any of the value converges
+        if(this.dotLabelConvergenceRandomize){
+            this.adjustDotLabelPosition();
+        } 
     }
 
     /**
@@ -184,8 +196,8 @@ export class LineChart {
      */
     drawGoalSection() {
         // build goal data as LineChartData
-        if(d3.select(".lineWrapperG-goal").node()){
-            d3.select(".lineWrapperG-goal").remove();
+        if(d3.select(".lineWrapperG-target").node()){
+            d3.select(".lineWrapperG-target").remove();
         }
         const goalData: LineChartData[] = [
             { labelBottom: 'Goal', value: 98, isComparison: false },
@@ -200,7 +212,7 @@ export class LineChart {
         * Line drawing
         */
         const goalPath = singleLineWrapperG.append("g")
-            .attr("class", `lineWrapperG-goal`)
+            .attr("class", `lineWrapperG-target`)
             .append("path")
             .attr("class", "goal-line")
             .style("stroke-width", 2)
@@ -231,7 +243,7 @@ export class LineChart {
         /*
         * Dot drawing
         */
-        d3.select('.lineWrapperG-goal')
+        d3.select('.lineWrapperG-target')
             .selectAll('circle.dots')
             .data(goalData)
             .enter().append('circle')
@@ -246,17 +258,25 @@ export class LineChart {
             .attr("class", "dots");
         // gets all the dots and do a for loop to get its data and append text
         const that = this;
-        d3.select('.lineWrapperG-goal').selectAll("circle.dots").each(function(d, i){
-            let _posY = posY(d, i);
-            if((d as any).value > 96){
-                _posY += 20;
+        d3.select('.lineWrapperG-target').selectAll("circle.dots").each(function(d, i){
+            let _posY = posY(d, i) + 4;
+            let _posX = posX(d, i);
+            const lastIndexNumber = goalData.length - 1;
+            if(i === lastIndexNumber){
+                _posX += 22;
             }
             else{
-                _posY -= 10;
+                _posX -= 22;
             }
+            // if((d as any).value > 96){
+            //     _posY += 20;
+            // }
+            // else{
+            //     _posY -= 10;
+            // }
             d3.select((this as any).parentElement).append("text")
                 .text((d as any).value + "%")
-                .attr("x", posX(d, i))
+                .attr("x", _posX)
                 .attr("transform", `translate(${that.chartOptions.margin.left + gutterVal},0)`) // temp fix
                 .attr("y", _posY)
                 .style("text-anchor", "middle")
@@ -301,7 +321,7 @@ export class LineChart {
         });
         // center align the legendWrapper group
         const bbox = legendWrapper.node().getBBox();
-        legendWrapper.attr("transform", `translate(${this.width / 2 - bbox.width / 2}, ${this.height + this.chartOptions.margin.top + 15})`);
+        legendWrapper.attr("transform", `translate(${this.width / 2 - bbox.width / 2}, ${this.height + this.chartOptions.margin.top + 45})`);
     }
 
     private getScalesXY(lineData: LineChartData[]): { yScale: d3.ScaleLinear<number, number, never>; xScale: d3.ScaleLinear<number, number, never>; }{
@@ -337,21 +357,25 @@ export class LineChart {
             .style('fill', 'white')
             .style("filter", "url(#drop-shadow)")
             .attr("class", "dots");
-        // gets all the dots and do a for loop to get its data and append text
+        // gets all the dots and do a for loop to get its data and append text according to X Y position of the dots
         const that = this;
         chartWrapperG.selectAll("circle.dots").each(function(d, i){
-            // d3 select this and get its parent and append text
             let _posY = posY(d, i);
-            if(d.value > 96){
-                _posY += 20;
-            }
+            debugger;
+            // for given {this.chartOptions.groupDataHighestId} line group the dot label should be below the dot
+            if(that.groupKey === that.chartOptions.groupDataHighestId){
+                _posY += 21;
+            } 
+            // // {10} is the gutter value to maintain the asthetic of the dots
+            // if(d.value > that.chartOptions.targetData?.value - 10){ 
+            //     _posY += 20;
+            // }
             else{
-                _posY -= 10;
+                _posY -= 16;
             }
             d3.select((this as any).parentElement).append("text")
                 .text((d as any).value + "%")
                 .attr("x", posX(d, i))
-                // minus it's height or plus it's height based on the value
                 .attr("y", _posY)
                 .style("font-size", "10px")
                 .style("text-anchor", "middle")
@@ -362,7 +386,7 @@ export class LineChart {
             .style("opacity", 0)
             .transition()
             .delay(function(d,i){ return i * (2500/lineData.length); })
-            .ease(d3.easeLinear) // this has to check
+            .ease(d3.easeLinear)
             .duration(2500)
             .style("opacity", 1);
     }
@@ -395,15 +419,14 @@ export class LineChart {
 
         // select all tick class inside x-axis and get data from the tick and append text
         //  rotate based on the data length {hardcoded value 15}
-        const dataThresold = 15;
-        const textRotation = lineData.length > dataThresold ? -45 : 0;
-        const translateXVal = lineData.length > dataThresold ? 24 : 0;
-        const translateYVal = lineData.length > dataThresold ? this.height + 20 : this.height;
+        const textRotation = lineData.length > this.dataRotationThresold ? -45 : 0;
+        const translateXVal = lineData.length > this.dataRotationThresold ? 35 : 0;
+        const translateYVal = lineData.length > this.dataRotationThresold ? this.height + 20 : this.height;
         this.svgElem.select('.x-axis').selectAll(".tick").append("text").data(lineData)
             .text(d => d.labelTop)
             .style("fill", "black")
             .style("font-size", "12")
-            .attr("y", -10)
+            .attr("y", -25)
             .attr("transform", `translate(${translateXVal}, -${translateYVal}) rotate(${textRotation})`);
 
         const yAxisGen = d3.axisLeft(yScale);
@@ -452,7 +475,7 @@ export class LineChart {
      */
     private addHetchingLines() {
         this.svgElem.selectAll(".x-axis .tick line")
-            .attr("y1", -this.height)
+            .attr("y1", -this.height - 18)
             .style("stroke-width", 1)
             .style("stroke-dasharray", "5,5")
             .style("stroke", "#D8D8D8");
@@ -496,7 +519,7 @@ export class LineChart {
             .style("text-anchor", "middle")
             .style("fill", "#8B8B8B")
             .style("font-size", "12")
-            .text("% of ontime shipments");
+            .text("% of Ontime Shipments");
     }
 
     private getPositionXY(xScale: d3.ScaleLinear<number, number, never>, yScale: d3.ScaleLinear<number, number, never>, lineData: LineChartData[]) {
@@ -522,29 +545,42 @@ export class LineChart {
             .attr("stroke-width", 1.5);
     }
 
-    private drawArea(
-        singleLineWrapperG: d3.Selection<SVGGElement, unknown, HTMLElement, any>, 
-        lineData: LineChartData[], 
-        xScale: d3.ScaleLinear<number, number, never>, 
-        yScale: d3.ScaleLinear<number, number, never>) 
-    {
-        const area = d3.area<LineChartData>()
-            .x((d, i) => xScale(i))
-            .y0(this.height)
-            .y1(d => yScale(d.value));
-        singleLineWrapperG.append("path")
-            .datum(lineData)
-            // .attr("fill", "#B02A4C")
-            // add gradient to the area
-            .attr("fill", "url(#area-gradient-" + this.groupKey + ")")
-            // .attr("fill-opacity", 0.1)
-            .style("opacity", 0)
-            .transition()
-            .delay(1000)
-            .duration(1000)
-            // .style("opacity", Math.random() * (1 - 0.1) + 0.1) // Random value between 0.1 to 1
-            .style("opacity", 1)
-            .attr("d", area);
+    private drawAreas(lineGroupData: LineChartGroupData[]){
+        // change the oreder of the lineGroupData based on the groupDataHighestId
+        // specific logic to handle area overlap issue
+        lineGroupData = lineGroupData.sort((a, b) => {
+            return a.groupId === this.chartOptions.groupDataHighestId ? 1 : -1;
+        });
+
+        lineGroupData.forEach(lineData => {
+            const { yScale, xScale } = this.getScalesXY(lineData.data);
+            const area = d3.area<LineChartData>()
+                .x((d, i) => xScale(i))
+                .y0(this.height)
+                .y1(d => yScale(d.value));
+
+            let areaWrapperGroup;
+            if(d3.select(".areaWrapperG").node()){
+                areaWrapperGroup = d3.select(".areaWrapperG");
+            }
+            else{
+                areaWrapperGroup = d3.select(".chartWrapperG")
+                    .append("g")
+                    .attr("class", "areaWrapperG")
+                    .attr("transform", `translate(${this.chartShiftX},0)`);
+            }
+            areaWrapperGroup.insert("path")
+                .datum(lineData.data)
+                // .attr("fill", lineData.groupColor.lineColor)
+                .attr("class", `${lineData.groupId}`)
+                .attr("fill", "url(#area-gradient-" + lineData.groupId + ")")
+                .style("opacity", 0)
+                .transition()
+                .delay(1000)
+                .duration(1000)
+                .style("opacity", 1)
+                .attr("d", area);
+        });
     }
 
     private updateChart(lineData: LineChartData[], lineIndex: number) {
@@ -557,8 +593,6 @@ export class LineChart {
         const { yScale, xScale } = this.getScalesXY(lineData);
         const { posX, posY } = this.getPositionXY(xScale, yScale, lineData);
         const line = this.createLine(xScale, yScale);
-        // Draw an area based on the lineData
-        this.drawArea(singleLineWrapperG, lineData, xScale, yScale);
         this.updatePath(line, lineData, singleLineWrapperG);
         this.drawDots(posX, posY, singleLineWrapperG, lineData);
     }
@@ -616,5 +650,30 @@ export class LineChart {
         .attr('in', 'SourceGraphic')
         .attr('in2', 'the-shadow')
         .attr('mode', 'normal');
+    }
+
+    adjustDotLabelPosition() {
+        // loop within groupData and check if the value is same then adjust the position
+        const that = this;
+        this.groupData.forEach((group, ind) => {
+            const lineData = group.data;
+            const { yScale, xScale } = this.getScalesXY(lineData);
+            const { posX, posY } = this.getPositionXY(xScale, yScale, lineData);
+            const dots = d3.select(`.lineWrapperG-${ind}`).selectAll("circle.dots");
+            dots.each(function(d, i){
+                let _posY = posY(d, i);
+                let _posX = posX(d, i);
+                // filter data inside groupData array based on index and get the value
+                // const filteredGrpDataOnInd = that.groupData.map((d) => d.data.concat(val => val.value));
+                _posX += 42;
+                
+                d3.select((this as any).parentElement).select("text")
+                    .attr("x", _posX)
+                    .attr("y", _posY);
+                // that.groupData.forEach((grp, index) => {
+                //     const filteredGrpData = grp.data.filter((d, i) => i === ind);
+                // });
+            });
+        });
     }
 }

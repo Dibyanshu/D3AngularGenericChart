@@ -31,7 +31,7 @@ export class AppComponent implements OnInit{
       this.loadDonutChart();
 
       this.loadLineChart();
-      // browser resixe event
+      // browser resize event
       window.addEventListener('resize', () => {
         if (this.dtsLeg3LineChart) {
           this.dtsLeg3LineChart.resize();
@@ -72,16 +72,6 @@ export class AppComponent implements OnInit{
 
     const lineChartGroupData: LineChartGroupData[] = [
       { 
-        groupId: 'ISD',
-        groupLabel: 'ISD',
-        groupColor: {
-          lineColor: '#0F0E38',
-          areaColor: '#E6F0FFCC',
-          dotColor: '#0F0E38'
-        }, 
-        data: isdLineData 
-      },
-      { 
         groupId: 'Cycle',
         groupLabel: '8 Week Avg', 
         groupColor: {
@@ -90,6 +80,16 @@ export class AppComponent implements OnInit{
           dotColor: '#B02A4C'
         },
         data: cycleData 
+      },
+      { 
+        groupId: 'ISD',
+        groupLabel: 'ISD',
+        groupColor: {
+          lineColor: '#0F0E38',
+          areaColor: '#D0DDF7',
+          dotColor: '#0F0E38'
+        }, 
+        data: isdLineData 
       },
     ];
     const lineChartGroupDataUpdated: LineChartGroupData[] = [
@@ -115,7 +115,7 @@ export class AppComponent implements OnInit{
       },
     ];
     const lineChartOption: LineOptions = {
-      margin: { top: 50, right: 20, bottom: 30, left: 50 },
+      margin: { top: 20, right: 20, bottom: 30, left: 50 },
       maxHeight: 600,
       isTargetLine: true,
       targetData: {
@@ -126,16 +126,18 @@ export class AppComponent implements OnInit{
         { label: 'ISD (06/24/2024)', color: '#0F0E38' },
         { label: '8 week avg.', color: '#B02A4C' },
         { label: 'Goal', color: '#628AB3'}
-      ]
+      ],
+      groupDataHighestId: 'ISD',
     }
     this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupData, lineChartOption);
+    // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupDataUpdated, lineChartOption);
     // console.log('::dtsLeg3LineChart.groupData::',dtsLeg3LineChart.groupData);
-    /*
-    dtsLeg3LineChart.groupData = lineChartGroupDataUpdated;
-    setTimeout(() => {
-      dtsLeg3LineChart.render(true);
-    }, 3000);
-    */
+    
+    // this.dtsLeg3LineChart.groupData = lineChartGroupDataUpdated;
+    // setTimeout(() => {
+    //   this.dtsLeg3LineChart.render(true);
+    // }, 5000);
+    
   }
 
   loadRadarChart(chartData: Array<{ axisSet: Array<{ axis: string, value: number }> }>) {
