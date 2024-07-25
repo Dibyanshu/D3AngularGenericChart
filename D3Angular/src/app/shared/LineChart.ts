@@ -64,7 +64,7 @@ export class LineChart {
     private groupKey: string = 'groupId';
     private coldRedraw: boolean; // to enable redraw of chart while resize
     private dotLabelConvergenceRandomize = false;
-    dataRotationThresold: number = 6;
+    dataRotationThresold: number = 10;
     isDataSwaping: boolean = false;
 
     constructor(container: string, groupData:LineChartGroupData[], options?: LineOptions) {
