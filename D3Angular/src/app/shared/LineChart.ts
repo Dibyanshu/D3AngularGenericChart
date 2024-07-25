@@ -150,6 +150,10 @@ export class LineChart {
         // Update the scales and redraw the chart
         this.drawChartLines();
         this.addHetchingLines();
+        // adjust the dot labels x and y position if any of the value converges
+        if(this.dotLabelConvergenceRandomize){
+            this.adjustDotLabelPosition();
+        }
     }
 
     private drawChartLines() {
