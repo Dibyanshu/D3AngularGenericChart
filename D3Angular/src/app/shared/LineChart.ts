@@ -303,21 +303,29 @@ export class LineChart {
         const legendWrapper = this.svgElem.append("g")
             .attr("class", "legendWrapper");
             const spaceBetweenLegends = 140;
-        legendData.forEach((legend, index) => {
-            legendWrapper.append("circle")
-                .attr("cx", index * spaceBetweenLegends)
-                .attr("cy", 0)
-                .attr("r", 6)
-                .style("stroke", legend.color)
-                .style("stroke-width", "2px")
-                .style('fill', 'white')
-                .style("filter", "url(#drop-shadow)")
-            legendWrapper.append("text")
-                .attr("x", index * spaceBetweenLegends + 16)
-                .attr("y", 5)
-                .text(legend.label)
-                .style("font-size", "12")
-                .style("fill", "#000000");
+            let transformValue = `translate(${this.chartOptions.margin.left}, 0)`;
+            legendData.forEach((legend, index) => {
+                if(index === 1){
+                    transformValue = `translate(${this.chartOptions.margin.left + 25}, 0)`; // temp fix
+                }
+                const legendDataGrp = legendWrapper.append("g")
+                    .attr("class", `legend-group-${legend.label}`)
+                    // if index is 1 then add the gutter value to the x position
+                    .attr("transform", `${transformValue}`);
+                legendDataGrp.append("circle")
+                    .attr("cx", index * spaceBetweenLegends)
+                    .attr("cy", 0)
+                    .attr("r", 6)
+                    .style("stroke", legend.color)
+                    .style("stroke-width", "2px")
+                    .style('fill', 'white')
+                    .style("filter", "url(#drop-shadow)")
+                legendDataGrp.append("text")
+                    .attr("x", index * spaceBetweenLegends + 16)
+                    .attr("y", 5)
+                    .text(legend.label)
+                    .style("font-size", "12")
+                    .style("fill", "#000000");
         });
         // center align the legendWrapper group
         const bbox = legendWrapper.node().getBBox();
@@ -361,7 +369,6 @@ export class LineChart {
         const that = this;
         chartWrapperG.selectAll("circle.dots").each(function(d, i){
             let _posY = posY(d, i);
-            debugger;
             // for given {this.chartOptions.groupDataHighestId} line group the dot label should be below the dot
             if(that.groupKey === that.chartOptions.groupDataHighestId){
                 _posY += 21;
@@ -379,6 +386,7 @@ export class LineChart {
                 .attr("y", _posY)
                 .style("font-size", "10px")
                 .style("text-anchor", "middle")
+                .attr("class", `dot-label-${i}`)
                 .style("fill", that.groupColor.dotColor);
         });
         
@@ -667,7 +675,7 @@ export class LineChart {
                 // const filteredGrpDataOnInd = that.groupData.map((d) => d.data.concat(val => val.value));
                 _posX += 42;
                 
-                d3.select((this as any).parentElement).select("text")
+                d3.select((this as any).parentElement).select(`.dot-label-${i}`)
                     .attr("x", _posX)
                     .attr("y", _posY);
                 // that.groupData.forEach((grp, index) => {
