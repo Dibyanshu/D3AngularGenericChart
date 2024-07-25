@@ -63,7 +63,7 @@ export class LineChart {
     };
     private groupKey: string = 'groupId';
     private coldRedraw: boolean; // to enable redraw of chart while resize
-    private dotLabelConvergenceRandomize = false;
+    private dotLabelConvergenceRandomize = true;
     dataRotationThresold: number = 10;
     isDataSwaping: boolean = false;
 
@@ -663,6 +663,13 @@ export class LineChart {
     adjustDotLabelPosition() {
         // loop within groupData and check if the value is same then adjust the position
         const that = this;
+        let lineData = [];
+        this.groupData.forEach((group, index) => lineData[index] = group.data.map((d, i) => d.value))
+        const matchedIndex = [];
+        lineData[0].forEach((value, index) => { Math.abs(value - lineData[1][index]) < 10 ? matchedIndex.push(index) : null;});
+        console.log('::matchedIndex::',matchedIndex);
+        const gutterVal = 30;
+        let indWisePOSxy = [];
         this.groupData.forEach((group, ind) => {
             const lineData = group.data;
             const { yScale, xScale } = this.getScalesXY(lineData);
@@ -671,17 +678,25 @@ export class LineChart {
             dots.each(function(d, i){
                 let _posY = posY(d, i);
                 let _posX = posX(d, i);
-                // filter data inside groupData array based on index and get the value
-                // const filteredGrpDataOnInd = that.groupData.map((d) => d.data.concat(val => val.value));
-                _posX += 42;
-                
-                d3.select((this as any).parentElement).select(`.dot-label-${i}`)
-                    .attr("x", _posX)
-                    .attr("y", _posY);
-                // that.groupData.forEach((grp, index) => {
-                //     const filteredGrpData = grp.data.filter((d, i) => i === ind);
-                // });
+                if(matchedIndex.includes(i)){
+                    d3.select((this as any).parentElement).select(`.dot-label-${i}`)
+                        .attr("class", `${group.groupId}`);
+                    indWisePOSxy.push({x: _posX, y: _posY});
+                }
             });
+        });
+        // @todo: adjust the dot label position based on the matchedIndex: Incomplete
+        this.groupData.forEach((group, ind) => {
+            if(ind === 0){
+                d3.select(`.lineWrapperG-${ind}`).selectAll(`text.${group.groupId}`).each(function(d, i){
+                    d3.select(this).attr("y", indWisePOSxy[i].y - gutterVal);
+                });
+            }
+            else{
+                d3.select(`.lineWrapperG-${ind}`).selectAll(`text.${group.groupId}`).each(function(d, i){
+                    d3.select(this).attr("y", indWisePOSxy[i].y + gutterVal);
+                });
+            }
         });
     }
 }
