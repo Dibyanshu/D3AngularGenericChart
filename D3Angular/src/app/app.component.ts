@@ -5,7 +5,7 @@ import { RadarChart } from './shared/RadarChart';
 import { RadarChartFakeData } from './data/radarChartFake.data';
 import { PieChart, PieChartData } from './shared/PieChart';
 import { LineChart, LineChartData, LineChartGroupData, LineOptions } from './shared/LineChart';
-import { lineChartUpdateData1, lineChartUpdateData2 } from './data/lineChartFake.data';
+import { lineChartUpdateData1, lineChartUpdateData2, lineChartUpdateData3 } from './data/lineChartFake.data';
 
 @Component({
   selector: 'app-root',
@@ -58,7 +58,9 @@ export class AppComponent implements OnInit{
       { labelBottom: 'LAS', value: 77, isComparison: false, labelTop: 'NRCC#1' },
       { labelBottom: 'GGG', value: 32, isComparison: false, labelTop: 'NRCC#1' },
       { labelBottom: 'SAN', value: 99, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'TUL', value: 65, isComparison: false, labelTop: 'NRCC#1' }
+      { labelBottom: 'TUL', value: 65, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'Comp1', value: 100, isComparison: true, labelTop: 'NRCC#2' },
+      { labelBottom: 'Comp2', value: 98, isComparison: true, labelTop: 'NRCC#2' }
     ];
     const cycleData: LineChartData[] = [
       { labelBottom: 'CMI', value: 76, isComparison: false, labelTop: 'NRCC#1'},
@@ -67,7 +69,9 @@ export class AppComponent implements OnInit{
       { labelBottom: 'LAS', value: 97, isComparison: false, labelTop: 'NRCC#1' },
       { labelBottom: 'GGG', value: 76, isComparison: false, labelTop: 'NRCC#1' },
       { labelBottom: 'SAN', value: 96, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'TUL', value: 64, isComparison: false, labelTop: 'NRCC#1' }
+      { labelBottom: 'TUL', value: 64, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'Comp1', value: 100, isComparison: true, labelTop: 'NRCC#2' },
+      { labelBottom: 'Comp2', value: 98, isComparison: true, labelTop: 'NRCC#2' }
     ];
 
     const lineChartGroupData: LineChartGroupData[] = [
@@ -115,7 +119,7 @@ export class AppComponent implements OnInit{
       },
     ];
     const lineChartOption: LineOptions = {
-      margin: { top: 20, right: 20, bottom: 30, left: 50 },
+      margin: { top: 40, right: 20, bottom: 30, left: 50 },
       maxHeight: 600,
       isTargetLine: true,
       targetData: {
@@ -129,7 +133,31 @@ export class AppComponent implements OnInit{
       ],
       groupDataHighestId: 'ISD',
     }
-    this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupData, lineChartOption);
+
+    const emptyCase: LineChartGroupData[] = [
+      { 
+        groupId: 'Cycle',
+        groupLabel: '8 Week Avg', 
+        groupColor: {
+          lineColor: '#B02A4C',
+          areaColor: '#F9EEF1CC',
+          dotColor: '#B02A4C'
+        },
+        data: [] 
+      },
+      { 
+        groupId: 'ISD',
+        groupLabel: 'ISD',
+        groupColor: {
+          lineColor: '#0F0E38',
+          areaColor: '#D0DDF7',
+          dotColor: '#0F0E38'
+        }, 
+        data: [] 
+      },
+    ];
+    this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartUpdateData3, lineChartOption);
+    // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', emptyCase, lineChartOption);
     // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupDataUpdated, lineChartOption);
     // console.log('::dtsLeg3LineChart.groupData::',dtsLeg3LineChart.groupData);
     

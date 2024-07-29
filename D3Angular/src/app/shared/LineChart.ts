@@ -63,8 +63,9 @@ export class LineChart {
     };
     private groupKey: string = 'groupId';
     private coldRedraw: boolean; // to enable redraw of chart while resize
-    private dotLabelConvergenceRandomize = true;
-    dataRotationThresold: number = 10;
+    private isDotLabelConvergenceHandle = true; // to enable dot label position adjustment
+    dataRotationThresold: number = 11; // x-axis top label rotation based on data length thresold
+    labelRotationBottomThresold: number = 11; // x-axis bottom label rotation based on data length thresold
     isDataSwaping: boolean = false;
 
     constructor(container: string, groupData:LineChartGroupData[], options?: LineOptions) {
@@ -100,6 +101,7 @@ export class LineChart {
         
         this.addLinearGradient();
         this.dropShadowFilter();
+        this.gausianBlurFilter();
         
         this.drawChartLines();
         // Add grid lines
@@ -150,10 +152,6 @@ export class LineChart {
         // Update the scales and redraw the chart
         this.drawChartLines();
         this.addHetchingLines();
-        // adjust the dot labels x and y position if any of the value converges
-        if(this.dotLabelConvergenceRandomize){
-            this.adjustDotLabelPosition();
-        }
     }
 
     private drawChartLines() {
@@ -169,36 +167,37 @@ export class LineChart {
         }
         // Draw an area based on the lineData
         this.drawAreas(this.groupData);
+        // Draw the axes
+        const { yScale, xScale } = this.getScalesXY(this.groupData[0].data);
+        this.drawAxes(xScale, yScale, this.groupData[0].data);
         // Draw the lines for each group
         this.groupData.forEach((group, index) => {
             this.groupColor = group.groupColor;
             this.groupKey = group.groupId;
             this.updateChart(group.data, index);
         });
-        // @todo: Update the axes if autoScale is enabled
-        /**
-         * @explain: The axes should be updated only once for all the lines, 
-         * because the x-axis value should be the same for all the lines
-         * (for detail explanation check the constraints above)
-         */
-        const { yScale, xScale } = this.getScalesXY(this.groupData[0].data);
-        this.drawAxes(xScale, yScale, this.groupData[0].data);
         this.drawLegends(xScale, yScale, this.chartOptions.legendData);
         // draw the goal single line and associated dots
         if(this.chartOptions.isTargetLine && this.chartOptions.targetData){
             this.drawGoalSection();
         }
         // adjust the dot labels x and y position if any of the value converges
-        if(this.dotLabelConvergenceRandomize){
+        if(this.isDotLabelConvergenceHandle){
             this.adjustDotLabelPosition();
-        } 
+        }
+        this.comparisonLabelStyleAdjust();
+        // check if the data is empty, then draw a centere message box with background blur
+        if(this.groupData[0].data.length === 0){
+            this.drawEmptyChartMessageCentered();
+            // this.drawEmptyChartMessageFullBlur
+        }
     }
 
     /**
-     * The `drawGoalSection` function in TypeScript creates a goal line chart with data points and
+     * The `drawGoalSection` function creates a goal line chart with data points and
      * animations.
      */
-    drawGoalSection() {
+    private drawGoalSection() {
         // build goal data as LineChartData
         if(d3.select(".lineWrapperG-target").node()){
             d3.select(".lineWrapperG-target").remove();
@@ -417,7 +416,7 @@ export class LineChart {
         const xAxisGen = d3.axisBottom(xScale);
         xAxisGen.ticks(lineData.length);
         xAxisGen.tickSize(0);
-        xAxisGen.tickPadding(25);
+        xAxisGen.tickPadding(35);
         // array of labels extract from data
         xAxisGen.tickFormat((d, i) => lineData[i].labelBottom);
         
@@ -430,10 +429,10 @@ export class LineChart {
             .call(xAxisGen);
 
         // select all tick class inside x-axis and get data from the tick and append text
-        //  rotate based on the data length {hardcoded value 15}
+        // rotate based on the data length
         const textRotation = lineData.length > this.dataRotationThresold ? -45 : 0;
         const translateXVal = lineData.length > this.dataRotationThresold ? 35 : 0;
-        const translateYVal = lineData.length > this.dataRotationThresold ? this.height + 20 : this.height;
+        const translateYVal = lineData.length > this.dataRotationThresold ? this.height + 40 : this.height + 20;
         this.svgElem.select('.x-axis').selectAll(".tick").append("text").data(lineData)
             .text(d => d.labelTop)
             .style("fill", "black")
@@ -478,19 +477,25 @@ export class LineChart {
             .attr("transform", `translate(0, -${this.chartShiftX})`)
             .style("stroke-width", 2)
             .style("stroke", "#ddd");
-        
-        this.addLabels();
+        // calling the addLabelOfYaxis function to add the y-axis label after the y-axis is drawn
+        this.addLabelOfYaxis();
     }
 
     /**
      * The function adds dashed horizontal lines to the x-axis ticks in an SVG element.
      */
     private addHetchingLines() {
+        const that = this;
         this.svgElem.selectAll(".x-axis .tick line")
-            .attr("y1", -this.height - 18)
+            .attr("y1", -this.height - 32)
             .style("stroke-width", 1)
             .style("stroke-dasharray", "5,5")
-            .style("stroke", "#D8D8D8");
+            // set stroke color based on the data isComparison value
+            .style("stroke", function(d, i){
+                // expecting the all groupData to have the comparison property and arbitrary groupData[0] is taken
+                return that.groupData[0].data[i].isComparison ? "#737373" : "#D8D8D8";
+            });
+            // .style("stroke", "#D8D8D8");
     }
 
     private updatePath(line, lineData: LineChartData[], chartWrapperG: d3.Selection<d3.BaseType, unknown, HTMLElement, any>) {
@@ -521,7 +526,7 @@ export class LineChart {
     /**
      * Appends a text element to the SVG element for displaying y-axis plot label
      */
-    private addLabels() {
+    private addLabelOfYaxis() {
         d3.select(".y-axis").append("text")
             .attr("transform", "rotate(-90)")
             .attr("y", 0 - this.chartOptions.margin.left*2)
@@ -664,14 +669,17 @@ export class LineChart {
         .attr('mode', 'normal');
     }
 
-    adjustDotLabelPosition() {
+    /**
+     * The `adjustDotLabelPosition` function adjusts the position of dot labels based on matched data
+     * values when the difference of 1 single dot value of 2 data sets is 10
+     */
+    private adjustDotLabelPosition() {
         // loop within groupData and check if the value is same then adjust the position
         const that = this;
         let lineData = [];
         this.groupData.forEach((group, index) => lineData[index] = group.data.map((d, i) => d.value))
         const matchedIndex = [];
         lineData[0].forEach((value, index) => { Math.abs(value - lineData[1][index]) < 10 ? matchedIndex.push(index) : null;});
-        console.log('::matchedIndex::',matchedIndex);
         const gutterVal = 30;
         let indWisePOSxy = [];
         this.groupData.forEach((group, ind) => {
@@ -689,7 +697,7 @@ export class LineChart {
                 }
             });
         });
-        // @todo: adjust the dot label position based on the matchedIndex: Incomplete
+        // @todo: adjust the dot label position based on the matchedIndex: Improve the logic
         this.groupData.forEach((group, ind) => {
             if(ind === 0){
                 d3.select(`.lineWrapperG-${ind}`).selectAll(`text.${group.groupId}`).each(function(d, i){
@@ -702,5 +710,114 @@ export class LineChart {
                 });
             }
         });
+    }
+
+    /**
+     * The function `comparisonLabelStyleAdjust` adjusts the style of labels on the x-axis based on a
+     * comparison property in the data.
+     */
+    private comparisonLabelStyleAdjust() {
+        const that = this;
+        const labelRotationValue = this.groupData[0].data.length > this.labelRotationBottomThresold ? 45 : 0;
+        const labelXVal = this.groupData[0].data.length > this.labelRotationBottomThresold ? 35 : 0;
+        const labelYval = this.groupData[0].data.length > this.labelRotationBottomThresold ? 15 : 0;
+        // loop within {groupData[0]} and check if the isComparison is true then adjust the style
+        // expecting the all groupData to have the comparison property and arbitrary groupData[0] is taken
+        d3.select(`.x-axis`).selectAll(`g.tick`).each(function(_, index){
+            // @information: handling bottom label rotation logic here to avoid the loop
+            d3.select(this).select('text').attr("transform", `translate(${labelXVal}, ${labelYval}) rotate(${labelRotationValue})`)
+            if(that.groupData[0].data[index].isComparison){
+                d3.select(this).selectAll('text').style("font-weight", "bold");
+            }
+        });
+    }
+    /**
+     * @todo: to be implemented
+     */
+    private drawEmptyChartMessageFullBlur() {
+        // draw a centere message box with background blur
+        // add a rectangle with blur effect
+        const rectXGutterVal = 120;
+        const rectYGutterVal = 100;
+        // const rectPosX = this.width / 2 - rectWidth / 2;
+        // const rectPosY = this.height / 2 - rectHeight / 2;
+        d3.select(".chartWrapperG").append("g")
+            .attr("class", "empty-chart-message")
+            .append("rect")
+            .attr("x", `-${this.chartOptions.margin.left+rectXGutterVal}`)
+            .attr("y", `-${this.chartOptions.margin.top+rectYGutterVal}`)
+            .attr("width", `${this.width+this.chartOptions.margin.left+rectXGutterVal+100}`)
+            .attr("height", `${this.height+this.chartOptions.margin.top+rectYGutterVal+100}`)
+            .attr("fill", "#D0DDF7")
+            .style("opacity", 0.4)
+            .attr("transform", `translate(${this.chartShiftX},0)`)
+            // add gaussian blur effect
+            .attr("filter", "url(#gaussian-blur-rect)")
+            .attr("class", "empty-chart-message-wrapper");
+            // .style("filter", "url(#drop-shadow)");
+        
+        // add text to the rectangle
+        d3.select(".empty-chart-message").append("text")
+            .text("No records found.")
+            .attr("x", this.width / 2)
+            .attr("y", this.height / 2)
+            .attr("text-anchor", "middle")
+            .attr("alignment-baseline", "middle")
+            .style("font-size", "14px")
+            .style("fill", "#000000")
+            .style("font-weight", "bold");
+    }
+    
+    private drawEmptyChartMessageCentered() {
+        // draw a centere message box
+        const rectWidth = 210;
+        const rectHeight = 50;
+        const rectPosX = this.width / 2 - rectWidth / 2;
+        const rectPosY = this.height / 2 - rectHeight / 2;
+        d3.select(".chartWrapperG").append("g")
+            .attr("class", "empty-chart-message")
+            .append("rect")
+            // centered rectangle
+            .attr("x", rectPosX)
+            .attr("y", rectPosY)
+            .attr("width", rectWidth)
+            .attr("height", rectHeight)
+            .attr("fill", "#7e7e7e")
+            // .style("opacity", 0.4)
+            .attr("transform", `translate(-${this.chartShiftX},0)`)
+            .attr("class", "empty-chart-message-wrapper");
+            // .style("filter", "url(#drop-shadow)");
+        
+        // add text to the rectangle
+        d3.select(".empty-chart-message").append("text")
+            .text("No records found.")
+            .attr("x", rectPosX + 20)
+            .attr("y", rectPosY + rectHeight / 2)
+            .attr("text-anchor", "middle")
+            .attr("alignment-baseline", "middle")
+            .style("font-size", "14px")
+            .style("fill", "#ffffff")
+            .style("font-weight", "bold");
+    }
+    /**
+     * @todo: gaussion blur filter is not working as expected
+     */
+    private gausianBlurFilter() {
+        // improvement: check if defs already exists
+        const defs = d3.select(`${this.container}`).select("defs");
+        let gaussianFilter = defs.append('svg:filter')
+        .attr('id', 'gaussian-blur-rect')
+        .attr('filterUnits', "userSpaceOnUse")
+        .attr('width', '110%')
+        .attr('height', '110%');
+        gaussianFilter.append('svg:feGaussianBlur')
+        .attr('in', 'SourceGraphic')
+        .attr('stdDeviation', 2)
+        .attr('result', 'blur');
+        gaussianFilter.append('svg:feColorMatrix')
+        .attr('out', 'blur')
+        .attr('type', 'matrix')
+        .attr('values', '0.3 0 0 0 0 0 0.3 0 0 0 0 0 0.3 0 0 0 0 0 1 0')
+        .attr('result', 'goo');
     }
 }
