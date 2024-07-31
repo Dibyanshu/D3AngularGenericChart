@@ -67,6 +67,7 @@ export class LineChart {
     dataRotationThresold: number = 11; // x-axis top label rotation based on data length thresold
     labelRotationBottomThresold: number = 11; // x-axis bottom label rotation based on data length thresold
     isDataSwaping: boolean = false;
+    dotLabelPositionDiffThresold: number = 10; // dot label position adjustment thresold
 
     constructor(container: string, groupData:LineChartGroupData[], options?: LineOptions) {
         this.chartOptions = { ...this.defaultOptions, ...options };
@@ -389,6 +390,7 @@ export class LineChart {
                 .attr("y", _posY)
                 .style("font-size", "10px")
                 .style("text-anchor", "middle")
+                .style("font-weight", "bold")
                 .attr("class", `dot-label-${i}`)
                 .style("fill", that.groupColor.dotColor);
         });
@@ -566,7 +568,7 @@ export class LineChart {
         // change the oreder of the lineGroupData based on the groupDataHighestId
         // specific logic to handle area overlap issue
         lineGroupData = lineGroupData.sort((a, b) => {
-            return a.groupId === this.chartOptions.groupDataHighestId ? 1 : -1;
+            return a.groupId === this.chartOptions.groupDataHighestId ? -1 : 1;
         });
 
         lineGroupData.forEach(lineData => {
@@ -670,7 +672,7 @@ export class LineChart {
     }
 
     /**
-     * The `adjustDotLabelPosition` function adjusts the position of dot labels based on matched data
+     * Adjusts the position of dot labels based on matched data
      * values when the difference of 1 single dot value of 2 data sets is 10
      */
     private adjustDotLabelPosition() {
@@ -679,8 +681,21 @@ export class LineChart {
         let lineData = [];
         this.groupData.forEach((group, index) => lineData[index] = group.data.map((d, i) => d.value))
         const matchedIndex = [];
-        lineData[0].forEach((value, index) => { Math.abs(value - lineData[1][index]) < 10 ? matchedIndex.push(index) : null;});
-        const gutterVal = 30;
+        lineData[0].forEach((value, index) => {
+            let caseValue = '';
+            if(value === lineData[1][index]){
+                caseValue = 'equal';
+            }
+            else if(value > lineData[1][index]){
+                caseValue = 'greater';
+            }
+            else{
+                caseValue = 'lesser';
+            }
+            Math.abs(value - lineData[1][index]) < this.dotLabelPositionDiffThresold ? matchedIndex.push({index, 'case':caseValue}) : null;
+        });
+        console.log(':matchedIndex:', matchedIndex);
+        // const gutterVal = 17;
         let indWisePOSxy = [];
         this.groupData.forEach((group, ind) => {
             const lineData = group.data;
@@ -690,9 +705,27 @@ export class LineChart {
             dots.each(function(d, i){
                 let _posY = posY(d, i);
                 let _posX = posX(d, i);
-                if(matchedIndex.includes(i)){
+                const matchIndexOnly = matchedIndex.map((d) => d.index);
+                if(matchIndexOnly.includes(i)){
                     d3.select((this as any).parentElement).select(`.dot-label-${i}`)
-                        .attr("class", `${group.groupId}`);
+                    .attr("class", `${group.groupId}`);
+                    const filteredMatchedIndex = matchedIndex.filter((d) => d.index === i);
+                    if(filteredMatchedIndex[0].case === 'lesser'){
+                        if(ind === 0){// Hardcoded logic ~ Cycle
+                            _posY += 40;
+                        }
+                        else{ // Hardcoded logic ~ ISD
+                            _posY -= 80;
+                        }
+                    }
+                    else if(filteredMatchedIndex[0].case === 'greater'){
+                        if(ind === 0){
+                            _posY += 40;
+                        }
+                        else{
+                            _posY -= 80;
+                        }
+                    }
                     indWisePOSxy.push({x: _posX, y: _posY});
                 }
             });
@@ -701,12 +734,12 @@ export class LineChart {
         this.groupData.forEach((group, ind) => {
             if(ind === 0){
                 d3.select(`.lineWrapperG-${ind}`).selectAll(`text.${group.groupId}`).each(function(d, i){
-                    d3.select(this).attr("y", indWisePOSxy[i].y - gutterVal);
+                    d3.select(this).attr("y", indWisePOSxy[i].y - 10);
                 });
             }
             else{
                 d3.select(`.lineWrapperG-${ind}`).selectAll(`text.${group.groupId}`).each(function(d, i){
-                    d3.select(this).attr("y", indWisePOSxy[i].y + gutterVal);
+                    d3.select(this).attr("y", indWisePOSxy[i].y - 90);
                 });
             }
         });

@@ -5,7 +5,7 @@ import { RadarChart } from './shared/RadarChart';
 import { RadarChartFakeData } from './data/radarChartFake.data';
 import { PieChart, PieChartData } from './shared/PieChart';
 import { LineChart, LineChartData, LineChartGroupData, LineOptions } from './shared/LineChart';
-import { lineChartUpdateData1, lineChartUpdateData2, lineChartUpdateData3 } from './data/lineChartFake.data';
+import { lineChartUpdateData1, lineChartUpdateData2, lineChartUpdateData3, lineChartUpdateData4 } from './data/lineChartFake.data';
 
 @Component({
   selector: 'app-root',
@@ -120,7 +120,7 @@ export class AppComponent implements OnInit{
     ];
     const lineChartOption: LineOptions = {
       margin: { top: 40, right: 20, bottom: 30, left: 50 },
-      maxHeight: 600,
+      maxHeight: 750,
       isTargetLine: true,
       targetData: {
         value: 98,
@@ -131,7 +131,7 @@ export class AppComponent implements OnInit{
         { label: '8 week avg.', color: '#B02A4C' },
         { label: 'Goal', color: '#628AB3'}
       ],
-      groupDataHighestId: 'ISD',
+      groupDataHighestId: 'Cycle',
     }
 
     const emptyCase: LineChartGroupData[] = [
@@ -156,7 +156,8 @@ export class AppComponent implements OnInit{
         data: [] 
       },
     ];
-    this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartUpdateData3, lineChartOption);
+    // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartUpdateData3, lineChartOption);
+    this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartUpdateData4, lineChartOption);
     // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', emptyCase, lineChartOption);
     // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupDataUpdated, lineChartOption);
     // console.log('::dtsLeg3LineChart.groupData::',dtsLeg3LineChart.groupData);
