@@ -568,7 +568,7 @@ export class LineChart {
         // change the oreder of the lineGroupData based on the groupDataHighestId
         // specific logic to handle area overlap issue
         lineGroupData = lineGroupData.sort((a, b) => {
-            return a.groupId === this.chartOptions.groupDataHighestId ? -1 : 1;
+            return a.groupId === this.chartOptions.groupDataHighestId ? 1 : -1;
         });
 
         lineGroupData.forEach(lineData => {
