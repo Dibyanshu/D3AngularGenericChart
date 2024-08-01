@@ -375,32 +375,39 @@ export class LineChart {
             let _posY = posY(d, i);
             // for given {this.chartOptions.groupDataHighestId} line group the dot label should be below the dot
             if(that.groupKey === that.chartOptions.groupDataHighestId){
-                _posY += 21;
+                _posY += 20;
             } 
             // // {10} is the gutter value to maintain the asthetic of the dots
             // if(d.value > that.chartOptions.targetData?.value - 10){ 
             //     _posY += 20;
             // }
             else{
-                _posY -= 16;
+                _posY -= 14;
             }
             d3.select((this as any).parentElement).append("text")
                 .text((d as any).value + "%")
                 .attr("x", posX(d, i))
                 .attr("y", _posY)
-                .style("font-size", "10px")
+                .style("font-size", "12px")
                 .style("text-anchor", "middle")
                 .style("font-weight", "bold")
                 .attr("class", `dot-label-${i}`)
                 .style("fill", that.groupColor.dotColor);
         });
         
-        chartWrapperG.selectAll("circle.dots", "text")
+        chartWrapperG.selectAll("circle.dots")
             .style("opacity", 0)
             .transition()
-            .delay(function(d,i){ return i * (2500/lineData.length); })
+            .delay(function(d,i){ return i * (2000/lineData.length); })
             .ease(d3.easeLinear)
-            .duration(2500)
+            .duration(2000)
+            .style("opacity", 1);
+        chartWrapperG.selectAll("text")
+            .style("opacity", 0)
+            .transition()
+            .delay(function(d,i){ return i * (2000/lineData.length); })
+            .ease(d3.easeLinear)
+            .duration(2000)
             .style("opacity", 1);
     }
 
@@ -430,6 +437,8 @@ export class LineChart {
             .attr("transform", `translate(0, ${this.height})`)
             .call(xAxisGen);
 
+        this.svgElem.select('.x-axis').selectAll("path")
+            .style("stroke-dasharray", "0, 0");
         // select all tick class inside x-axis and get data from the tick and append text
         // rotate based on the data length
         const textRotation = lineData.length > this.dataRotationThresold ? -45 : 0;
@@ -461,6 +470,9 @@ export class LineChart {
             .style("font-size", "14")
             .attr("color", "#000000")
             .call(yAxisGen);
+
+        this.svgElem.select('.y-axis').selectAll("path")
+            .style("stroke-dasharray", "0, 0");
         
         // select all axis and cjange color
         this.svgElem.select('.x-axis').selectAll("path").style("stroke", "#ddd").style("stroke-width", "2px");
@@ -568,7 +580,7 @@ export class LineChart {
         // change the oreder of the lineGroupData based on the groupDataHighestId
         // specific logic to handle area overlap issue
         lineGroupData = lineGroupData.sort((a, b) => {
-            return a.groupId === this.chartOptions.groupDataHighestId ? 1 : -1;
+            return a.groupId === this.chartOptions.groupDataHighestId ? -1 : 1;
         });
 
         lineGroupData.forEach(lineData => {
@@ -680,7 +692,7 @@ export class LineChart {
         const that = this;
         let lineData = [];
         this.groupData.forEach((group, index) => lineData[index] = group.data.map((d, i) => d.value))
-        const matchedIndex = [];
+        let matchedByValueWithinThresoldData = [];
         lineData[0].forEach((value, index) => {
             let caseValue = '';
             if(value === lineData[1][index]){
@@ -692,9 +704,8 @@ export class LineChart {
             else{
                 caseValue = 'lesser';
             }
-            Math.abs(value - lineData[1][index]) < this.dotLabelPositionDiffThresold ? matchedIndex.push({index, 'case':caseValue}) : null;
+            Math.abs(value - lineData[1][index]) < this.dotLabelPositionDiffThresold ? matchedByValueWithinThresoldData.push({index, caseValue, values:[value, lineData[1][index]]}) : null;
         });
-        console.log(':matchedIndex:', matchedIndex);
         // const gutterVal = 17;
         let indWisePOSxy = [];
         this.groupData.forEach((group, ind) => {
@@ -705,44 +716,51 @@ export class LineChart {
             dots.each(function(d, i){
                 let _posY = posY(d, i);
                 let _posX = posX(d, i);
-                const matchIndexOnly = matchedIndex.map((d) => d.index);
+                const matchIndexOnly = matchedByValueWithinThresoldData.map((d) => d.index);
                 if(matchIndexOnly.includes(i)){
-                    d3.select((this as any).parentElement).select(`.dot-label-${i}`)
-                    .attr("class", `${group.groupId}`);
-                    const filteredMatchedIndex = matchedIndex.filter((d) => d.index === i);
-                    if(filteredMatchedIndex[0].case === 'lesser'){
-                        if(ind === 0){// Hardcoded logic ~ Cycle
-                            _posY += 40;
-                        }
-                        else{ // Hardcoded logic ~ ISD
-                            _posY -= 80;
-                        }
-                    }
-                    else if(filteredMatchedIndex[0].case === 'greater'){
-                        if(ind === 0){
-                            _posY += 40;
-                        }
-                        else{
-                            _posY -= 80;
-                        }
-                    }
+                    matchedByValueWithinThresoldData.find((d) => d.index === i)['cords'] = {x: _posX, y: _posY};
                     indWisePOSxy.push({x: _posX, y: _posY});
                 }
             });
         });
         // @todo: adjust the dot label position based on the matchedIndex: Improve the logic
-        this.groupData.forEach((group, ind) => {
-            if(ind === 0){
-                d3.select(`.lineWrapperG-${ind}`).selectAll(`text.${group.groupId}`).each(function(d, i){
-                    d3.select(this).attr("y", indWisePOSxy[i].y - 10);
-                });
-            }
-            else{
-                d3.select(`.lineWrapperG-${ind}`).selectAll(`text.${group.groupId}`).each(function(d, i){
-                    d3.select(this).attr("y", indWisePOSxy[i].y - 90);
-                });
-            }
-        });
+        for (let ind = 0; ind < this.groupData.length; ind++) {
+            const lineIndex = ind;
+            d3.select(`.lineWrapperG-${ind} .dotsWrapper`).selectAll(`text`).each(function(d, i){
+                const filteredMatchedIndex = matchedByValueWithinThresoldData.filter(d => d.index === i);
+                let pointValues;
+                let valueDiff;
+                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === 'lesser'){
+                    pointValues = filteredMatchedIndex[0].values;
+                    valueDiff = Math.abs(pointValues[0] - pointValues[1]);
+                    const gutterVal = 50;
+                    if(true){ // if the difference is less than 10 then adjust the position
+                        if(lineIndex === 0){
+                            d3.select(this).attr("y", filteredMatchedIndex[0].cords.y + (gutterVal + valueDiff*2));
+                        }
+                        else{
+                            d3.select(this).attr("y", filteredMatchedIndex[0].cords.y - (15 + valueDiff*2));
+                        }
+                    }
+                }
+                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === 'greater'){
+                    pointValues = filteredMatchedIndex[0].values;
+                    valueDiff = Math.abs(pointValues[0] - pointValues[1]);
+                    const gutterVal = 37;
+                    if(true){ // if the difference is less than 10 then adjust the position
+                        if(lineIndex === 0){
+                            d3.select(this).attr("y", filteredMatchedIndex[0].cords.y - (gutterVal + valueDiff*2));
+                        }
+                        else{
+                            d3.select(this).attr("y", filteredMatchedIndex[0].cords.y + (25 + valueDiff*2));
+                        }
+                    }
+                }
+                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === 'equal'){
+                    d3.select(this).attr("y", filteredMatchedIndex[0].cords.y - 14);
+                }
+            });
+        }
     }
 
     /**

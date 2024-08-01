@@ -552,7 +552,7 @@ export const lineChartUpdateData4: LineChartGroupData[] = [
 
                 "labelBottom": "TYS",
 
-                "value": 97.01,
+                "value": 97,
 
                 "isComparison": false,
 
@@ -564,7 +564,7 @@ export const lineChartUpdateData4: LineChartGroupData[] = [
 
                 "labelBottom": "All Network",
 
-                "value": 99.26,
+                "value": 100,
 
                 "isComparison": false,
 
@@ -812,7 +812,7 @@ export const lineChartUpdateData4: LineChartGroupData[] = [
 
                 "labelBottom": "TYS",
 
-                "value": 96.55,
+                "value": 97,
 
                 "isComparison": false,
 
@@ -824,7 +824,7 @@ export const lineChartUpdateData4: LineChartGroupData[] = [
 
                 "labelBottom": "All Network",
 
-                "value": 99.32,
+                "value": 100,
 
                 "isComparison": false,
 
