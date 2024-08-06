@@ -656,7 +656,7 @@ export const lineChartUpdateData4: LineChartGroupData[] = [
 
                 "labelBottom": "ABQ",
 
-                "value": 94.44,
+                "value": 86.87,
 
                 "isComparison": false,
 

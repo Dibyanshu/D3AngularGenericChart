@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { PredefinedShape } from '../helper/predefinedShape';
 
 export type LineOptions = {
     margin: { top: number, right: number, bottom: number, left: number };
@@ -180,7 +181,8 @@ export class LineChart {
         this.drawLegends(xScale, yScale, this.chartOptions.legendData);
         // draw the goal single line and associated dots
         if(this.chartOptions.isTargetLine && this.chartOptions.targetData){
-            this.drawGoalSection();
+            // this.drawGoalSection();
+            this.newdrawGoalSection();
         }
         // adjust the dot labels x and y position if any of the value converges
         if(this.isDotLabelConvergenceHandle){
@@ -299,6 +301,75 @@ export class LineChart {
         */
     }
 
+    private newdrawGoalSection() {
+        // build goal data as LineChartData
+        if(d3.select(".lineWrapperG-target").node()){
+            d3.select(".lineWrapperG-target").remove();
+        }
+        const goalData: LineChartData[] = [
+            { labelBottom: 'Goal', value: 98, isComparison: false },
+            { labelBottom: 'Goal', value: 98, isComparison: false }
+        ];
+        let singleLineWrapperG = d3.select(".chartWrapperG")
+        const gutterVal = 11;
+        const { yScale, xScale } = this.getScalesXY(goalData);
+        // update the xScale range to include the gutter value
+        xScale.range([0, this.width + (this.chartOptions.margin.left) * 2]);
+        const { posX, posY } = this.getPositionXY(xScale, yScale, goalData);
+        const goalLine = this.createLine(xScale, yScale);
+        /*
+        * Line drawing
+        */
+        const goalPath = singleLineWrapperG.append("g")
+            .attr("class", `lineWrapperG-target`)
+            .append("path")
+            .attr("class", "goal-line")
+            .style("stroke-dasharray", "2,4")
+            // .attr("transform", `translate(${this.chartOptions.margin.left + gutterVal},0)`)
+            .attr("stroke-linejoin", "round")
+            .attr("stroke-linecap", "round");
+
+        // create a path set the d attribute to the goalLine
+        let goalDemarcationPathG = d3.select(".lineWrapperG-target").append("g")
+            .attr("transform", `translate(-${200},2)`);
+
+        goalDemarcationPathG.append("path")
+            .attr("d", PredefinedShape.goalLineDemarcation)
+            .attr("fill", this.chartOptions.targetData.color);
+        goalDemarcationPathG.append("text")
+            .text(`Goal ${this.chartOptions.targetData.value}%`)
+            .style("font-size", "12px")
+            .attr("dy", "13px")
+            .style("fill", "#ffffff")
+            .attr("dx", "4px");
+        const updatedDemarcationG = d3.select(".lineWrapperG-target").select("g")
+            // animate this group to move from left to right
+            .transition()
+            .duration(800)
+            .ease(d3.easeCircleIn)
+            .attr("transform", `translate(-${this.chartOptions.margin.left + gutterVal + 2},2)`);
+        const updatedPath = d3
+            .select(goalPath.node())
+            // .select("path")
+            .interrupt()
+            .datum(goalData)
+            .style("stroke-width", 1)
+            .style("fill", "none")
+            .style("stroke", this.chartOptions.targetData.color)
+            .attr("d", goalLine);
+
+        const pathLength = (updatedPath.node() as any).getTotalLength();
+        const transitionPath = d3
+            .transition()
+            .ease(d3.easeSin)
+            .duration(2500);
+        updatedPath
+            .attr("stroke-dashoffset", pathLength)
+            .attr("stroke-dasharray", pathLength)
+            .transition(transitionPath)
+            .attr("stroke-dashoffset", 0);
+    }
+
     private drawLegends(xScale: d3.ScaleLinear<number, number, never>, yScale: d3.ScaleLinear<number, number, never>, legendData: { label: string; color: string; }[]) {
         // Add circular legends below x-axis
         if (this.svgElem.select(".legendWrapper").node() && this.coldRedraw) {
@@ -321,14 +392,14 @@ export class LineChart {
                     .attr("cy", 0)
                     .attr("r", 6)
                     .style("stroke", legend.color)
-                    .style("stroke-width", "2px")
+                    .style("stroke-width", "5px")
                     .style('fill', 'white')
                     .style("filter", "url(#drop-shadow)")
                 legendDataGrp.append("text")
                     .attr("x", index * spaceBetweenLegends + 16)
                     .attr("y", 5)
                     .text(legend.label)
-                    .style("font-size", "12")
+                    .style("font-size", "14px")
                     .style("fill", "#000000");
         });
         // center align the legendWrapper group
@@ -365,7 +436,7 @@ export class LineChart {
             .attr("cy", posY)
             .attr('r', 6)
             .style("stroke", this.groupColor.dotColor)
-            .style("stroke-width", "2px")
+            .style("stroke-width", "5px")
             .style('fill', 'white')
             .style("filter", "url(#drop-shadow)")
             .attr("class", "dots");
@@ -388,7 +459,7 @@ export class LineChart {
                 .text((d as any).value + "%")
                 .attr("x", posX(d, i))
                 .attr("y", _posY)
-                .style("font-size", "12px")
+                .style("font-size", "14px")
                 .style("text-anchor", "middle")
                 .style("font-weight", "bold")
                 .attr("class", `dot-label-${i}`)
@@ -432,7 +503,7 @@ export class LineChart {
         // xAxisGenerator.tickSize(-this.height);
         this.svgElem.append("g")
             .attr("class", "x-axis")
-            .style("font-size", "12")
+            .style("font-size", "14px")
             .attr("color", "#000000")
             .attr("transform", `translate(0, ${this.height})`)
             .call(xAxisGen);
@@ -447,7 +518,7 @@ export class LineChart {
         this.svgElem.select('.x-axis').selectAll(".tick").append("text").data(lineData)
             .text(d => d.labelTop)
             .style("fill", "black")
-            .style("font-size", "12")
+            .style("font-size", "14px")
             .attr("y", -25)
             .attr("transform", `translate(${translateXVal}, -${translateYVal}) rotate(${textRotation})`);
 
@@ -519,7 +590,7 @@ export class LineChart {
         .interrupt()
         .datum(lineData)
         .attr("class", "line")
-        .style("stroke-width", 2)
+        .style("stroke-width", 3)
         .style("fill", "none")
         .style("stroke", this.groupColor.lineColor)
         .attr("d", line);
@@ -549,7 +620,7 @@ export class LineChart {
             .attr("class", "y-axis-label")
             .style("text-anchor", "middle")
             .style("fill", "#8B8B8B")
-            .style("font-size", "12")
+            .style("font-size", "14px")
             .text("% of Ontime Shipments");
     }
 
@@ -580,7 +651,7 @@ export class LineChart {
         // change the oreder of the lineGroupData based on the groupDataHighestId
         // specific logic to handle area overlap issue
         lineGroupData = lineGroupData.sort((a, b) => {
-            return a.groupId === this.chartOptions.groupDataHighestId ? -1 : 1;
+            return a.groupId === this.chartOptions.groupDataHighestId ? 1 : -1;
         });
 
         lineGroupData.forEach(lineData => {
@@ -723,6 +794,18 @@ export class LineChart {
                 }
             });
         });
+        
+        d3.select(`.lineWrapperG-${0} .dotsWrapper`).selectAll(`circle`).each(function(d, i){
+            // skip the last dot
+            if(i === lineData[0].length - 1){
+                return;
+            }
+            const filteredMatchedIndex = matchedByValueWithinThresoldData.filter(d => d.index === i);
+            if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === 'equal'){
+                d3.select(this).style("stroke-width", "10px")
+            }
+        });
+
         // @todo: adjust the dot label position based on the matchedIndex: Improve the logic
         for (let ind = 0; ind < this.groupData.length; ind++) {
             const lineIndex = ind;
