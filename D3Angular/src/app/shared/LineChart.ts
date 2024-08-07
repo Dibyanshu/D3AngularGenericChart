@@ -35,6 +35,17 @@ export type LineChartColors = {
     areaColor: string; // area fill color will be gradient with secondary color as white
     dotColor: string;
 };
+type LineChartDotLebelAdjustment = {
+    index: number,
+    caseValue: DotLabelPositionValueMatcher,
+    values: number[],
+    cords?: {x: number, y: number}[]
+}
+enum DotLabelPositionValueMatcher {
+    'lower',
+    'higher',
+    'equal'
+}
 
 export class LineChart {
     /*
@@ -68,7 +79,7 @@ export class LineChart {
     dataRotationThresold: number = 11; // x-axis top label rotation based on data length thresold
     labelRotationBottomThresold: number = 11; // x-axis bottom label rotation based on data length thresold
     isDataSwaping: boolean = false;
-    dotLabelPositionDiffThresold: number = 10; // dot label position adjustment thresold
+    dotLabelPositionDiffThresold: number = 8; // dot label position adjustment thresold
 
     constructor(container: string, groupData:LineChartGroupData[], options?: LineOptions) {
         this.chartOptions = { ...this.defaultOptions, ...options };
@@ -186,7 +197,8 @@ export class LineChart {
         }
         // adjust the dot labels x and y position if any of the value converges
         if(this.isDotLabelConvergenceHandle){
-            this.adjustDotLabelPosition();
+            const matchedDotVals = this.adjustDotLabelPosition();
+            this.adjustSameValueDots(matchedDotVals);
         }
         this.comparisonLabelStyleAdjust();
         // check if the data is empty, then draw a centere message box with background blur
@@ -426,7 +438,16 @@ export class LineChart {
         .y(d => yScale(d.value));
     }
 
-    private drawDots(posX: any, posY: any, chartWrapperG: any, lineData: LineChartData[]) {
+    /**
+     * This function appends circles and text labels to a chart, animating their opacity over time.
+     * @param {any} posX - it represents the x-coordinate position where the dots will be drawn on the chart
+     * and text labels on the x-axis of the chart.
+     * @param {any} posY - it represents the y-coordinate position where the dots will be drawn on the chart
+     * @param {any} chartWrapperG - it represents the SVG group element where the dots and labels will be appended. 
+     * @param {LineChartData[]} lineData - it represents the data that will be used to draw the dots and labels on the chart.
+     * @returns it appends circles and text labels no returns
+     */
+    private drawDotsWithLabel(posX: any, posY: any, chartWrapperG: any, lineData: LineChartData[]) {
         chartWrapperG.append("g")
             .attr("class", "dotsWrapper")
             .selectAll('circle.dots')
@@ -446,7 +467,7 @@ export class LineChart {
             let _posY = posY(d, i);
             // for given {this.chartOptions.groupDataHighestId} line group the dot label should be below the dot
             if(that.groupKey === that.chartOptions.groupDataHighestId){
-                _posY += 20;
+                _posY += 24;
             } 
             // // {10} is the gutter value to maintain the asthetic of the dots
             // if(d.value > that.chartOptions.targetData?.value - 10){ 
@@ -696,7 +717,7 @@ export class LineChart {
         const { posX, posY } = this.getPositionXY(xScale, yScale, lineData);
         const line = this.createLine(xScale, yScale);
         this.updatePath(line, lineData, singleLineWrapperG);
-        this.drawDots(posX, posY, singleLineWrapperG, lineData);
+        this.drawDotsWithLabel(posX, posY, singleLineWrapperG, lineData);
     }
 
     /**
@@ -756,94 +777,104 @@ export class LineChart {
 
     /**
      * Adjusts the position of dot labels based on matched data
-     * values when the difference of 1 single dot value of 2 data sets is 10
+     * values when the difference of 1 single dot value of 2 data sets is {this.dotLabelPositionDiffThresold}
      */
     private adjustDotLabelPosition() {
-        // loop within groupData and check if the value is same then adjust the position
-        const that = this;
-        let lineData = [];
-        this.groupData.forEach((group, index) => lineData[index] = group.data.map((d, i) => d.value))
-        let matchedByValueWithinThresoldData = [];
-        lineData[0].forEach((value, index) => {
-            let caseValue = '';
-            if(value === lineData[1][index]){
-                caseValue = 'equal';
-            }
-            else if(value > lineData[1][index]){
-                caseValue = 'greater';
-            }
-            else{
-                caseValue = 'lesser';
-            }
-            Math.abs(value - lineData[1][index]) < this.dotLabelPositionDiffThresold ? matchedByValueWithinThresoldData.push({index, caseValue, values:[value, lineData[1][index]]}) : null;
-        });
-        // const gutterVal = 17;
-        let indWisePOSxy = [];
-        this.groupData.forEach((group, ind) => {
-            const lineData = group.data;
-            const { yScale, xScale } = this.getScalesXY(lineData);
-            const { posX, posY } = this.getPositionXY(xScale, yScale, lineData);
-            const dots = d3.select(`.lineWrapperG-${ind}`).selectAll("circle.dots");
-            dots.each(function(d, i){
-                let _posY = posY(d, i);
-                let _posX = posX(d, i);
-                const matchIndexOnly = matchedByValueWithinThresoldData.map((d) => d.index);
-                if(matchIndexOnly.includes(i)){
-                    matchedByValueWithinThresoldData.find((d) => d.index === i)['cords'] = {x: _posX, y: _posY};
-                    indWisePOSxy.push({x: _posX, y: _posY});
-                }
-            });
-        });
-        
-        d3.select(`.lineWrapperG-${0} .dotsWrapper`).selectAll(`circle`).each(function(d, i){
-            // skip the last dot
-            if(i === lineData[0].length - 1){
-                return;
-            }
-            const filteredMatchedIndex = matchedByValueWithinThresoldData.filter(d => d.index === i);
-            if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === 'equal'){
-                d3.select(this).style("stroke-width", "10px")
-            }
-        });
-
-        // @todo: adjust the dot label position based on the matchedIndex: Improve the logic
+        let { matchedByValueWithinThresoldData }: { matchedByValueWithinThresoldData: [LineChartDotLebelAdjustment] } = this.setThresholdMatches();
+        matchedByValueWithinThresoldData = this.setThresoldMatchCordinates([...matchedByValueWithinThresoldData]);
         for (let ind = 0; ind < this.groupData.length; ind++) {
             const lineIndex = ind;
             d3.select(`.lineWrapperG-${ind} .dotsWrapper`).selectAll(`text`).each(function(d, i){
                 const filteredMatchedIndex = matchedByValueWithinThresoldData.filter(d => d.index === i);
                 let pointValues;
-                let valueDiff;
-                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === 'lesser'){
+                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.lower){
                     pointValues = filteredMatchedIndex[0].values;
-                    valueDiff = Math.abs(pointValues[0] - pointValues[1]);
-                    const gutterVal = 50;
-                    if(true){ // if the difference is less than 10 then adjust the position
-                        if(lineIndex === 0){
-                            d3.select(this).attr("y", filteredMatchedIndex[0].cords.y + (gutterVal + valueDiff*2));
-                        }
-                        else{
-                            d3.select(this).attr("y", filteredMatchedIndex[0].cords.y - (15 + valueDiff*2));
-                        }
+                    if(lineIndex === 0){
+                        d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y + 24);
+                    }
+                    else{
+                        d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y - 14);
                     }
                 }
-                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === 'greater'){
+                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.higher){
                     pointValues = filteredMatchedIndex[0].values;
-                    valueDiff = Math.abs(pointValues[0] - pointValues[1]);
-                    const gutterVal = 37;
-                    if(true){ // if the difference is less than 10 then adjust the position
-                        if(lineIndex === 0){
-                            d3.select(this).attr("y", filteredMatchedIndex[0].cords.y - (gutterVal + valueDiff*2));
-                        }
-                        else{
-                            d3.select(this).attr("y", filteredMatchedIndex[0].cords.y + (25 + valueDiff*2));
-                        }
+                    if(lineIndex === 0){
+                        d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y - 14);
+                    }
+                    else{
+                        d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y + 24);
                     }
                 }
-                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === 'equal'){
-                    d3.select(this).attr("y", filteredMatchedIndex[0].cords.y - 14);
+                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.equal){
+                    // @enhancement:decide whether to move the label up or down based on the previous and next label position
+                    // @limitation: hardcodedly setting the y position of the label to keep it in the top of the dot
+                    d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y - 14);
                 }
             });
         }
+        return matchedByValueWithinThresoldData;
+    }
+    
+    private adjustSameValueDots(matchedByValueWithinThresoldData: [LineChartDotLebelAdjustment]) {
+        /* Select all circle elements of first line with same value and increase the circle stroke */
+        const that = this;
+        d3.select(`.lineWrapperG-${0} .dotsWrapper`).selectAll(`circle`).each(function (d, i) {
+            // skip the last dot
+            if (i === that.groupData[0].data.length - 1) {
+                return;
+            }
+            const filteredMatchedIndex = matchedByValueWithinThresoldData.filter(d => d.index === i);
+            if (!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.equal) {
+                d3.select(this).style("stroke-width", "10px");
+            }
+        });
+    }
+
+    private setThresoldMatchCordinates(matchedByValueWithinThresoldData: [LineChartDotLebelAdjustment]) {
+        this.groupData.forEach((group, ind) => {
+            const lineData = group.data;
+            const { yScale, xScale } = this.getScalesXY(lineData);
+            const { posX, posY } = this.getPositionXY(xScale, yScale, lineData);
+            const dots = d3.select(`.lineWrapperG-${ind}`).selectAll("circle.dots");
+            dots.each(function (d, i) {
+                let _posY = posY(d, i);
+                let _posX = posX(d, i);
+                const matchIndexOnly = matchedByValueWithinThresoldData.map((d) => d.index);
+                if (matchIndexOnly.includes(i)) {
+                    matchedByValueWithinThresoldData.find((d) => d.index === i).cords.push({ x: _posX, y: _posY });
+                }
+            });
+        });
+        return matchedByValueWithinThresoldData;
+    }
+
+    private setThresholdMatches() {
+        let lineData = [];
+        this.groupData.forEach((group, index) => lineData[index] = group.data.map((d, i) => d.value));
+        let matchedByValueWithinThresoldData: [LineChartDotLebelAdjustment] = null;
+        lineData[0].forEach((value, index) => {
+            let caseValue: DotLabelPositionValueMatcher = null;
+            if (value === lineData[1][index]) {
+                caseValue = DotLabelPositionValueMatcher.equal;
+            }
+            else if (value > lineData[1][index]) {
+                caseValue = DotLabelPositionValueMatcher.higher;
+            }
+            else {
+                caseValue = DotLabelPositionValueMatcher.lower;
+            }
+
+            if (Math.abs(value - lineData[1][index]) < this.dotLabelPositionDiffThresold) {
+                const dd: LineChartDotLebelAdjustment = { index, caseValue, values: [value, lineData[1][index]], cords: [] };
+                if (!!matchedByValueWithinThresoldData) {
+                    matchedByValueWithinThresoldData.push(dd);
+                }
+                else {
+                    matchedByValueWithinThresoldData = [dd];
+                }
+            }
+        });
+        return { matchedByValueWithinThresoldData };
     }
 
     /**
