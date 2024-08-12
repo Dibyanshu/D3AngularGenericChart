@@ -5,7 +5,9 @@ import { RadarChart } from './shared/RadarChart';
 import { RadarChartFakeData } from './data/radarChartFake.data';
 import { PieChart, PieChartData } from './shared/PieChart';
 import { LineChart, LineChartData, LineChartGroupData, LineOptions } from './shared/LineChart';
-import { lineChartUpdateData1, lineChartUpdateData2, lineChartUpdateData3, lineChartUpdateData4 } from './data/lineChartFake.data';
+import { lineChartUpdateData1, lineChartUpdateData2, lineChartUpdateData3, lineChartUpdateData4, lineChartUpdateData5 } from './data/lineChartFake.data';
+import { barChartFakeData, barChartFakeData2 } from './data/barChartFake.data';
+import { BarChart } from './shared/BarChart';
 
 @Component({
   selector: 'app-root',
@@ -31,6 +33,8 @@ export class AppComponent implements OnInit{
       this.loadDonutChart();
 
       this.loadLineChart();
+
+      this.loadBarChartVariant1();
       // browser resize event
       window.addEventListener('resize', () => {
         if (this.dtsLeg3LineChart) {
@@ -39,6 +43,10 @@ export class AppComponent implements OnInit{
       });
     }, 1000);
 
+  }
+  loadBarChartVariant1() {
+    new BarChart('#svgBarContainer1', barChartFakeData2, { width: 800, height: 250 });
+    // new BarChart('#svgBarContainer1', barChartFakeData2, { width: 800, height: 400 });
   }
 
   loadLineChart() {
@@ -156,8 +164,8 @@ export class AppComponent implements OnInit{
         data: [] 
       },
     ];
-    // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartUpdateData3, lineChartOption);
-    this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartUpdateData4, lineChartOption);
+    this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartUpdateData5, lineChartOption);
+    // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartUpdateData4, lineChartOption);
     // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', emptyCase, lineChartOption);
     // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupDataUpdated, lineChartOption);
     // console.log('::dtsLeg3LineChart.groupData::',dtsLeg3LineChart.groupData);

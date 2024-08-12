@@ -837,4 +837,555 @@ export const lineChartUpdateData4: LineChartGroupData[] = [
     }
 
 ]
- 
+
+export const lineChartUpdateData5: LineChartGroupData[] = [
+
+    {
+
+        "groupId": "Cycle",
+
+        "groupLabel": "8 Week Avg",
+
+        "groupColor": {
+
+            "lineColor": "#B02A4C",
+
+            "areaColor": "#F9EEF1CC",
+
+            "dotColor": "#B02A4C"
+
+        },
+
+        "data": [
+
+            {
+
+                "labelBottom": "YKM",
+
+                "value": 74.07,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#6"
+
+            },
+
+            {
+
+                "labelBottom": "XNA",
+
+                "value": 74.47,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#4"
+
+            },
+
+            {
+
+                "labelBottom": "CHA",
+
+                "value": 77.14,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "PNS",
+
+                "value": 79.19,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "TUL",
+
+                "value": 81.36,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#4"
+
+            },
+
+            {
+
+                "labelBottom": "MSY",
+
+                "value": 84.45,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#4"
+
+            },
+
+            {
+
+                "labelBottom": "ABQ",
+
+                "value": 86.87,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#4"
+
+            },
+
+            {
+
+                "labelBottom": "GGG",
+
+                "value": 88.98,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#4"
+
+            },
+
+            {
+
+                "labelBottom": "CHS",
+
+                "value": 91.46,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "CSG",
+
+                "value": 92.31,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "JAX",
+
+                "value": 92.77,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#10"
+
+            },
+
+            {
+
+                "labelBottom": "IND",
+
+                "value": 93.17,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#8"
+
+            },
+
+            {
+
+                "labelBottom": "SDF",
+
+                "value": 94,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#8"
+
+            },
+
+            {
+
+                "labelBottom": "MGM",
+
+                "value": 94.87,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "GEG",
+
+                "value": 95.51,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#6"
+
+            },
+
+            {
+
+                "labelBottom": "BNA",
+
+                "value": 96.54,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "EAT",
+
+                "value": 96.55,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#6"
+
+            },
+
+            {
+
+                "labelBottom": "SAT",
+
+                "value": 96.82,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#4"
+
+            },
+
+            {
+
+                "labelBottom": "CMI",
+
+                "value": 96.97,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#8"
+
+            },
+
+            {
+
+                "labelBottom": "TYS",
+
+                "value": 97.01,
+
+                "isComparison": true,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "All Network",
+
+                "value": 99.32,
+
+                "isComparison": false,
+
+                "labelTop": ""
+
+            }
+
+        ]
+
+    },
+
+    {
+
+        "groupId": "ISD",
+
+        "groupLabel": "ISD",
+
+        "groupColor": {
+
+            "lineColor": "#0F0E38",
+
+            "areaColor": "#E6F0FFCC",
+
+            "dotColor": "#0F0E38"
+
+        },
+
+        "data": [
+
+            {
+
+                "labelBottom": "YKM",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#6"
+
+            },
+
+            {
+
+                "labelBottom": "XNA",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#4"
+
+            },
+
+            {
+
+                "labelBottom": "CHA",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "PNS",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "TUL",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#4"
+
+            },
+
+            {
+
+                "labelBottom": "MSY",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#4"
+
+            },
+
+            {
+
+                "labelBottom": "ABQ",
+
+                "value": 94.44,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#4"
+
+            },
+
+            {
+
+                "labelBottom": "GGG",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#4"
+
+            },
+
+            {
+
+                "labelBottom": "CHS",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "CSG",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "JAX",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#10"
+
+            },
+
+            {
+
+                "labelBottom": "IND",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#8"
+
+            },
+
+            {
+
+                "labelBottom": "SDF",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#8"
+
+            },
+
+            {
+
+                "labelBottom": "MGM",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "GEG",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#6"
+
+            },
+
+            {
+
+                "labelBottom": "BNA",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "EAT",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#6"
+
+            },
+
+            {
+
+                "labelBottom": "SAT",
+
+                "value": 100,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#4"
+
+            },
+
+            {
+
+                "labelBottom": "CMI",
+
+                "value": 90.91,
+
+                "isComparison": false,
+
+                "labelTop": "NRCC#8"
+
+            },
+
+            {
+
+                "labelBottom": "TYS",
+
+                "value": 96.55,
+
+                "isComparison": true,
+
+                "labelTop": "NRCC#3"
+
+            },
+
+            {
+
+                "labelBottom": "All Network",
+
+                "value": 99.32,
+
+                "isComparison": false,
+
+                "labelTop": ""
+
+            }
+
+        ]
+
+    }
+
+];

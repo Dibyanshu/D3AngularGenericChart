@@ -458,6 +458,7 @@ export class LineChart {
             .attr('r', 6)
             .style("stroke", this.groupColor.dotColor)
             .style("stroke-width", "5px")
+            // .style('fill', '#ffc107') // yellow suggested color
             .style('fill', 'white')
             .style("filter", "url(#drop-shadow)")
             .attr("class", "dots");
@@ -781,33 +782,33 @@ export class LineChart {
      */
     private adjustDotLabelPosition() {
         let { matchedByValueWithinThresoldData }: { matchedByValueWithinThresoldData: [LineChartDotLebelAdjustment] } = this.setThresholdMatches();
-        matchedByValueWithinThresoldData = this.setThresoldMatchCordinates([...matchedByValueWithinThresoldData]);
+        matchedByValueWithinThresoldData = this.setThresoldMatchCordinates(matchedByValueWithinThresoldData);
         for (let ind = 0; ind < this.groupData.length; ind++) {
             const lineIndex = ind;
             d3.select(`.lineWrapperG-${ind} .dotsWrapper`).selectAll(`text`).each(function(d, i){
                 const filteredMatchedIndex = matchedByValueWithinThresoldData.filter(d => d.index === i);
-                let pointValues;
-                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.lower){
-                    pointValues = filteredMatchedIndex[0].values;
-                    if(lineIndex === 0){
+                if(filteredMatchedIndex.length === 0){
+                    return;
+                }
+                if(filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.lower){
+                    if(lineIndex === 0){ // checking for the first line group to adjust the label position below the dot
                         d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y + 24);
                     }
-                    else{
+                    else{ // for the second line group onwards the label should be above the dot
                         d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y - 14);
                     }
                 }
-                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.higher){
-                    pointValues = filteredMatchedIndex[0].values;
-                    if(lineIndex === 0){
+                if(filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.higher){
+                    if(lineIndex === 0){ // checking for the first line group to adjust the label position below the dot
                         d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y - 14);
                     }
-                    else{
+                    else{ // for the second line group onwards the label should be above the dot
                         d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y + 24);
                     }
                 }
-                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.equal){
-                    // @enhancement:decide whether to move the label up or down based on the previous and next label position
-                    // @limitation: hardcodedly setting the y position of the label to keep it in the top of the dot
+                if(filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.equal){
+                    // @enhancement: decide whether to move the label up or down based on the previous and next label position
+                    // @limitation: hardcodedly setting the y position of the label to keep it in the above of the dot
                     d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y - 14);
                 }
             });
