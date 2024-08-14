@@ -1,25 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { PreloadAllModules, provideRouter, RouterLink, RouterOutlet, withDebugTracing, withPreloading } from '@angular/router';
+import { RouterOutlet } from '@angular/router';
 import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { RadarChart } from './shared/RadarChart';
-import { RadarChartFakeData } from './data/radarChartFake.data';
-import { PieChart, PieChartData } from './shared/PieChart';
-import { LineChart, LineChartData, LineChartGroupData, LineOptions } from './shared/LineChart';
-import { lineChartUpdateData1, lineChartUpdateData2, lineChartUpdateData3, lineChartUpdateData4, lineChartUpdateData5 } from './data/lineChartFake.data';
-import { barChartFakeData, barChartFakeData2 } from './data/barChartFake.data';
-import { BarChart } from './shared/BarChart';
-import { bootstrapApplication } from '@angular/platform-browser';
-import { provideHttpClient } from '@angular/common/http';
-import { APP_ROUTES } from './app.routes';
+import { LineChart, LineChartData, LineChartGroupData, LineOptions } from '../../shared/LineChart';
+import { lineChartUpdateData1, lineChartUpdateData2, lineChartUpdateData5 } from '../../data/lineChartFake.data';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NgbModule, RouterLink],
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.scss'
+  imports: [RouterOutlet, NgbModule],
+  templateUrl: './example-page1.html',
+  styleUrl: './example-page1.scss'
 })
-export class AppComponent implements OnInit{
+export class ExamplePage1Component implements OnInit{
   title = 'D3Angular';
   radarChart = null;
   dtsLeg3LineChart: LineChart;
@@ -29,15 +21,8 @@ export class AppComponent implements OnInit{
 
   ngOnInit(): void {
     setTimeout(() => {
-      const chartData = new RadarChartFakeData().generateData();
-      this.loadRadarChart(chartData);
-
-      this.loadPieChart();
-      this.loadDonutChart();
 
       this.loadLineChart();
-
-      this.loadBarChartVariant1();
       // browser resize event
       window.addEventListener('resize', () => {
         if (this.dtsLeg3LineChart) {
@@ -46,10 +31,6 @@ export class AppComponent implements OnInit{
       });
     }, 1000);
 
-  }
-  loadBarChartVariant1() {
-    new BarChart('#svgBarContainer1', barChartFakeData2, { width: 800, height: 250 });
-    // new BarChart('#svgBarContainer1', barChartFakeData2, { width: 800, height: 400 });
   }
 
   loadLineChart() {
@@ -180,40 +161,7 @@ export class AppComponent implements OnInit{
     
   }
 
-  loadRadarChart(chartData: Array<{ axisSet: Array<{ axis: string, value: number }> }>) {
-    const formatedChartData = chartData;
-    this.radarChart = new RadarChart('#svgRadarContainer')
-    this.radarChart.data(formatedChartData);
-    this.radarChart.render();
-  }
-
-  loadPieChart() {
-    const pieChartData: PieChartData[] = [
-      { label: 'Completed', value: Math.floor(Math.random() * 1000) },
-      { label: 'To be recieved', value: Math.floor(Math.random() * 1000) },
-      { label: 'In progress', value: Math.floor(Math.random() * 1000) }
-    ];
-    new PieChart('#svgPieContainer', pieChartData, {chartType: 'pie', arcScalingEnable: true, arcScalingIndex: 0});
-  }
-
-  loadDonutChart() {
-    const pieChartData: PieChartData[] = [
-      { label: 'Completed', value: Math.floor(Math.random() * 1000) },
-      { label: 'To be recieved', value: Math.floor(Math.random() * 1000) },
-      { label: 'In progress', value: Math.floor(Math.random() * 1000) }
-    ];
-    new PieChart('#svgDonutContainer', pieChartData, {chartType: 'donut', innerRadius: 170});
-  }
-
   public open(modal: any): void {
     this.modalService.open(modal);
   }
 }
-
-bootstrapApplication(AppComponent, {
-  providers: [
-    provideHttpClient(),
-    // provider to inject routes, preload all modules and trace route change events
-    provideRouter(APP_ROUTES, withPreloading(PreloadAllModules), withDebugTracing())
-  ]
-});

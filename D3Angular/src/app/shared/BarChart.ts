@@ -24,12 +24,12 @@ export class BarChart {
     private margin: { top: number; right: number; bottom: number; left: number; };
     private width: number;
     private height: number;
-    x0: d3.ScaleBand<string>;
-    x1: d3.ScaleBand<string>;
-    y: d3.ScaleLinear<number, number, never>;
-    xAxis: d3.Axis<string>;
-    yAxis: d3.Axis<d3.NumberValue>;
-    chartWrapperG: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
+    private x0: d3.ScaleBand<string>;
+    private x1: d3.ScaleBand<string>;
+    private y: d3.ScaleLinear<number, number, never>;
+    private xAxis: d3.Axis<string>;
+    private yAxis: d3.Axis<d3.NumberValue>;
+    private chartWrapperG: d3.Selection<SVGGElement, unknown, HTMLElement, any>;
 
     constructor(container: string, data: BarChartData[], barChartOptions?: BarChartOptions) {
         this.chartOptions = { ...this.defaultOptions, ...barChartOptions };
