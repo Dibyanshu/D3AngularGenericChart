@@ -1,50 +1,83 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { LineChart, LineChartData, LineChartGroupData, LineOptions } from '../../shared/LineChart';
 import { LineChartCopy } from '../../shared/LineChart-Copy';
+import { PieChart, PieChartData } from '../../shared/PieChart';
+import { RadarChart } from '../../shared/RadarChart';
+import { lineChartUpdateData1, lineChartUpdateData2, lineChartUpdateData5 } from '../../data/lineChartFake.data';
+import { barChartFakeData2 } from '../../data/barChartFake.data';
+import { RadarChartFakeData } from '../../data/radarChartFake.data';
+import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { BarChart } from '../../shared/BarChart';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [],
+  imports: [NgbModule],
   templateUrl: './example-page1.html',
   styleUrl: './example-page1.scss'
 })
-export class ExamplePage1Component implements OnInit{
+export class ExamplePage1Component implements OnInit, AfterViewInit{
   title = 'D3Angular';
   radarChart = null;
-  dtsDDLineChart: LineChartCopy;
+  dtsLeg3LineChart: LineChart;
 
-  constructor() {
+  constructor(private modalService: NgbModal) {
+  }
+  ngAfterViewInit(): void {
+    const chartData = new RadarChartFakeData().generateData();
+    this.loadRadarChart(chartData);
+
+    this.loadPieChart();
+    this.loadDonutChart();
+
+    this.loadLineChart();
+
+    this.loadBarChartVariant1();
+    // browser resize event
+    window.addEventListener('resize', () => {
+      if (this.dtsLeg3LineChart) {
+        this.dtsLeg3LineChart.resize();
+      }
+    });
   }
 
   ngOnInit(): void {
-    setTimeout(() => {
-      this.loadLineChart();
-      // browser resize event
-      window.addEventListener('resize', () => {
-        if (this.dtsDDLineChart) {
-          this.dtsDDLineChart.resize();
-        }
-      });
-    }, 1000);
-
+  }
+  loadBarChartVariant1() {
+    new BarChart('#svgBarContainer1', barChartFakeData2, { width: 800, height: 250 });
+    // new BarChart('#svgBarContainer1', barChartFakeData2, { width: 800, height: 400 });
   }
 
   loadLineChart() {
+    type APIResponseData = {
+      data: {
+        value: number;
+        staionOrStore: string;
+        region: string;
+        isFocusLocation: boolean;
+      }[];
+      groupName: string;      
+    }
     const isdLineData: LineChartData[] = [
-      { labelBottom: '01/01/2024 - 02/28/2024', value: 2, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: '01/01/2024 - 02/28/2024', value: 50, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: '01/01/2024 - 02/28/2024', value: 58, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: '01/01/2024 - 02/28/2024', value: 77, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: '01/01/2024 - 02/28/2024', value: 32, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: '01/01/2024 - 02/28/2024', value: 99, isComparison: false, labelTop: 'NRCC#1' }
+      { labelBottom: 'CMI', value: 2, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'CHS', value: 50, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'ABQ', value: 58, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'LAS', value: 77, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'GGG', value: 32, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'SAN', value: 99, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'TUL', value: 65, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'Comp1', value: 100, isComparison: true, labelTop: 'NRCC#2' },
+      { labelBottom: 'Comp2', value: 98, isComparison: true, labelTop: 'NRCC#2' }
     ];
     const cycleData: LineChartData[] = [
-      { labelBottom: '01/01/2024 - 02/28/2024', value: 76, isComparison: false, labelTop: 'NRCC#1'},
-      { labelBottom: '01/01/2024 - 02/28/2024', value: 79, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: '01/01/2024 - 02/28/2024', value: 96, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: '01/01/2024 - 02/28/2024', value: 97, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: '01/01/2024 - 02/28/2024', value: 76, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: '01/01/2024 - 02/28/2024', value: 96, isComparison: false, labelTop: 'NRCC#1' }
+      { labelBottom: 'CMI', value: 76, isComparison: false, labelTop: 'NRCC#1'},
+      { labelBottom: 'CHS', value: 79, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'ABQ', value: 96, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'LAS', value: 97, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'GGG', value: 76, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'SAN', value: 96, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'TUL', value: 64, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: 'Comp1', value: 100, isComparison: true, labelTop: 'NRCC#2' },
+      { labelBottom: 'Comp2', value: 98, isComparison: true, labelTop: 'NRCC#2' }
     ];
 
     const lineChartGroupData: LineChartGroupData[] = [
@@ -69,6 +102,28 @@ export class ExamplePage1Component implements OnInit{
         data: isdLineData 
       },
     ];
+    const lineChartGroupDataUpdated: LineChartGroupData[] = [
+      { 
+        groupId: 'ISD',
+        groupLabel: 'ISD', 
+        groupColor: {
+          lineColor: '#0F0E38',
+          areaColor: '#E6F0FFCC',
+          dotColor: '#0F0E38'
+        },
+        data: lineChartUpdateData1 
+      },
+      { 
+        groupId: 'Cycle',
+        groupLabel: '8 Week Avg', 
+        groupColor: {
+          lineColor: '#B02A4C',
+          areaColor: '#F9EEF1CC',
+          dotColor: '#B02A4C'
+        },  
+        data: lineChartUpdateData2 
+      },
+    ];
     const lineChartOption: LineOptions = {
       margin: { top: 40, right: 20, bottom: 30, left: 50 },
       maxHeight: 750,
@@ -83,13 +138,69 @@ export class ExamplePage1Component implements OnInit{
         { label: 'Goal', color: '#628AB3'}
       ],
       groupDataHighestId: 'Cycle',
-      xAxisLabel: {
-        isLebelBreak: true,
-      }
     }
-    this.dtsDDLineChart = new LineChartCopy('#svgDrillDownLineContainer', lineChartGroupData, lineChartOption);
-    this.dtsDDLineChart.clickEvent = (d) => {
-      console.log('clicked', d.labelBottom);
-    };
+
+    const emptyCase: LineChartGroupData[] = [
+      { 
+        groupId: 'Cycle',
+        groupLabel: '8 Week Avg', 
+        groupColor: {
+          lineColor: '#B02A4C',
+          areaColor: '#F9EEF1CC',
+          dotColor: '#B02A4C'
+        },
+        data: [] 
+      },
+      { 
+        groupId: 'ISD',
+        groupLabel: 'ISD',
+        groupColor: {
+          lineColor: '#0F0E38',
+          areaColor: '#D0DDF7',
+          dotColor: '#0F0E38'
+        }, 
+        data: [] 
+      },
+    ];
+    this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartUpdateData5, lineChartOption);
+    // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartUpdateData4, lineChartOption);
+    // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', emptyCase, lineChartOption);
+    // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupDataUpdated, lineChartOption);
+    // console.log('::dtsLeg3LineChart.groupData::',dtsLeg3LineChart.groupData);
+    
+    // this.dtsLeg3LineChart.groupData = lineChartGroupDataUpdated;
+    // setTimeout(() => {
+    //   this.dtsLeg3LineChart.render(true);
+    // }, 5000);
+    
+  }
+
+  loadRadarChart(chartData: Array<{ axisSet: Array<{ axis: string, value: number }> }>) {
+    const formatedChartData = chartData;
+    this.radarChart = new RadarChart('#svgRadarContainer')
+    this.radarChart.data(formatedChartData);
+    this.radarChart.render();
+  }
+
+  loadPieChart() {
+    const pieChartData: PieChartData[] = [
+      { label: 'Completed', value: Math.floor(Math.random() * 1000) },
+      { label: 'To be recieved', value: Math.floor(Math.random() * 1000) },
+      { label: 'In progress', value: Math.floor(Math.random() * 1000) }
+    ];
+    new PieChart('#svgPieContainer', pieChartData, {chartType: 'pie', arcScalingEnable: true, arcScalingIndex: 0});
+  }
+
+  loadDonutChart() {
+    const pieChartData: PieChartData[] = [
+      { label: 'Completed', value: Math.floor(Math.random() * 1000) },
+      { label: 'To be recieved', value: Math.floor(Math.random() * 1000) },
+      { label: 'In progress', value: Math.floor(Math.random() * 1000) }
+    ];
+    new PieChart('#svgDonutContainer', pieChartData, {chartType: 'donut', innerRadius: 170});
+  }
+
+  public open(modal: any): void {
+    this.modalService.open(modal);
   }
 }

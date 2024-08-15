@@ -11,6 +11,9 @@
         <li class="nav-item">
           <a class="nav-link" routerLink="/example-page1" routerLinkActive="active" aria-current="page">Example-page1</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/example-page2" routerLinkActive="active" aria-current="page">Example-page2</a>
+        </li>
         <!-- <li class="nav-item">
           <a class="nav-link" href="#">Link</a>
         </li>
@@ -37,59 +40,3 @@
   </div>
 </nav>
 <router-outlet></router-outlet>
-<div class="container-fluid py-3">
-  <div class="row my-3">
-    <div class="col-6">
-      <svg id="svgBarContainer1" class="svg-big"></svg>
-    </div>
-    <!-- <div class="col col-3">
-      &nbsp;
-    </div> -->
-  </div>
-  <div class="row my-3">
-    <div class="col-10">
-      <svg id="svgLineContainer" class="svg-big" width="600" height="600"></svg>
-    </div>
-    <!-- <div class="col col-3">
-      &nbsp;
-    </div> -->
-  </div>
-  <div class="row">
-    <div class="col">
-      <svg id="svgRadarContainer" class="svg-big" width="600" height="600" viewBox="0 0 600 600"></svg>
-    </div>
-  <div class="row my-3">
-    <div class="col">
-      <svg id="svgPieContainer" class="svg-big" width="600" height="600" viewBox="0 0 600 600"></svg>
-    </div>
-    <div class="col">
-      <svg id="svgDonutContainer" class="svg-big" width="600" height="600" viewBox="0 0 600 600"></svg>
-    </div>
-  </div>
-  <div class="row my-3">
-    <div class="col">
-      <button class="btn btn-sm btn-outline-primary" (click)="open(demoModal)">Launch demo modal</button>
-    </div>
-  </div>
-</div>
-
-<ng-template #demoModal let-modal>
-  <div class="modal-header">
-    <h4 class="modal-title" id="modal-basic-title">Profile update</h4>
-    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
-  </div>
-  <div class="modal-body">
-    <form>
-      <div class="form-group">
-        <label for="dateOfBirth">Date of birth</label>
-        <div class="input-group">
-          <input id="dateOfBirth" name="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" ngbDatepicker #dp="ngbDatepicker">
-          <button type="button" class="btn btn-outline-secondary bi bi-calendar" (click)="dp.toggle()"></button>
-        </div>
-      </div>
-    </form>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Save</button>
-  </div>
-</ng-template>

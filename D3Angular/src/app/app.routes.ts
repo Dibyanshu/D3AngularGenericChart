@@ -6,5 +6,9 @@ export const APP_ROUTES: Routes = [
     {
         path: 'example-page1',
         loadComponent: () => import('./pages/example-page1/example-page1').then(m => m.ExamplePage1Component)
+    },
+    {
+        path: 'example-page2',
+        loadComponent: () => import('./pages/example-page2/example-page2').then(m => m.ExamplePage2Component)
     }
 ];
