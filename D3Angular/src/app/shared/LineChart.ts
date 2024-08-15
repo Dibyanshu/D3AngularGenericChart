@@ -10,6 +10,9 @@ export type LineOptions = {
         value: number;
         color: string;
     };
+    xAxisLabel?: {
+        isLebelBreak?: boolean;
+    };
     isAutoScale?: boolean;
     groupDataHighestId?: string;
     legendData:{
@@ -120,6 +123,9 @@ export class LineChart {
         this.drawChartLines();
         // Add grid lines
         this.addHetchingLines();
+        if(this.chartOptions.xAxisLabel?.isLebelBreak === true){
+            this.wrapText();
+        }
     }
 
     /**
@@ -166,6 +172,9 @@ export class LineChart {
         // Update the scales and redraw the chart
         this.drawChartLines();
         this.addHetchingLines();
+        if(this.chartOptions.xAxisLabel?.isLebelBreak === true){
+            this.wrapText();
+        }
     }
 
     private drawChartLines() {
@@ -521,7 +530,8 @@ export class LineChart {
         const xAxisGen = d3.axisBottom(xScale);
         xAxisGen.ticks(lineData.length);
         xAxisGen.tickSize(0);
-        xAxisGen.tickPadding(35);
+        let tickTextPadding = this.chartOptions.xAxisLabel?.isLebelBreak ? 15 : 35;
+        xAxisGen.tickPadding(tickTextPadding);
         // array of labels extract from data
         xAxisGen.tickFormat((d, i) => lineData[i].labelBottom);
         
@@ -998,5 +1008,34 @@ export class LineChart {
             }
             return callBack.call(data);
         }
+    }
+
+    // break text into multiple lines using tspans and dy attribute
+    private wrapText(width = 100) {
+        let textSelector = d3.select('.x-axis').selectAll("text");
+        textSelector.each(function() {
+            if(d3.select(this).text().length > 10){
+                let text = d3.select(this);
+                let words = text.text().split(/\s+/).reverse();
+                let word;
+                let line = [];
+                let dxC = -4;
+                let lineHeight = 1.1; // ems
+                let y = text.attr("y");
+                let dy = parseFloat(text.attr("dy"));
+                let dx = 6;
+                let tspan = text.text(null).append("tspan").attr("x", dx).attr("y", y).attr("dy", dy + "em");
+                while (word = words.pop()) {
+                    line.push(word);
+                    tspan.text(line.join(" "));
+                    if (tspan.node().getComputedTextLength() > width) {
+                        line.pop();
+                        tspan.text(line.join(" "));
+                        line = [word];
+                        tspan = text.append("tspan").attr("x", dx + dxC).attr("y", y).attr("dy", `${lineHeight + dy}em`).text(word);
+                    }
+                }
+            }
+        });
     }
 }

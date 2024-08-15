@@ -214,6 +214,6 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideHttpClient(),
     // provider to inject routes, preload all modules and trace route change events
-    provideRouter(APP_ROUTES, withPreloading(PreloadAllModules), withDebugTracing())
+    provideRouter(APP_ROUTES, withPreloading(PreloadAllModules))
   ]
 });

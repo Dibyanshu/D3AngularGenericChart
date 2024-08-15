@@ -11,7 +11,7 @@ import { LineChartCopy } from '../../shared/LineChart-Copy';
 export class ExamplePage1Component implements OnInit{
   title = 'D3Angular';
   radarChart = null;
-  dtsLeg3LineChart: LineChartCopy;
+  dtsDDLineChart: LineChartCopy;
 
   constructor() {
   }
@@ -20,37 +20,31 @@ export class ExamplePage1Component implements OnInit{
     setTimeout(() => {
       this.loadLineChart();
       // browser resize event
-      // window.addEventListener('resize', () => {
-      //   if (this.dtsLeg3LineChart) {
-      //     this.dtsLeg3LineChart.resize();
-      //   }
-      // });
+      window.addEventListener('resize', () => {
+        if (this.dtsDDLineChart) {
+          this.dtsDDLineChart.resize();
+        }
+      });
     }, 1000);
 
   }
 
   loadLineChart() {
     const isdLineData: LineChartData[] = [
-      { labelBottom: 'CMI', value: 2, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'CHS', value: 50, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'ABQ', value: 58, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'LAS', value: 77, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'GGG', value: 32, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'SAN', value: 99, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'TUL', value: 65, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'Comp1', value: 100, isComparison: true, labelTop: 'NRCC#2' },
-      { labelBottom: 'Comp2', value: 98, isComparison: true, labelTop: 'NRCC#2' }
+      { labelBottom: '01/01/2024 - 02/28/2024', value: 2, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: '01/01/2024 - 02/28/2024', value: 50, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: '01/01/2024 - 02/28/2024', value: 58, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: '01/01/2024 - 02/28/2024', value: 77, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: '01/01/2024 - 02/28/2024', value: 32, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: '01/01/2024 - 02/28/2024', value: 99, isComparison: false, labelTop: 'NRCC#1' }
     ];
     const cycleData: LineChartData[] = [
-      { labelBottom: 'CMI', value: 76, isComparison: false, labelTop: 'NRCC#1'},
-      { labelBottom: 'CHS', value: 79, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'ABQ', value: 96, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'LAS', value: 97, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'GGG', value: 76, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'SAN', value: 96, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'TUL', value: 64, isComparison: false, labelTop: 'NRCC#1' },
-      { labelBottom: 'Comp1', value: 100, isComparison: true, labelTop: 'NRCC#2' },
-      { labelBottom: 'Comp2', value: 98, isComparison: true, labelTop: 'NRCC#2' }
+      { labelBottom: '01/01/2024 - 02/28/2024', value: 76, isComparison: false, labelTop: 'NRCC#1'},
+      { labelBottom: '01/01/2024 - 02/28/2024', value: 79, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: '01/01/2024 - 02/28/2024', value: 96, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: '01/01/2024 - 02/28/2024', value: 97, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: '01/01/2024 - 02/28/2024', value: 76, isComparison: false, labelTop: 'NRCC#1' },
+      { labelBottom: '01/01/2024 - 02/28/2024', value: 96, isComparison: false, labelTop: 'NRCC#1' }
     ];
 
     const lineChartGroupData: LineChartGroupData[] = [
@@ -89,9 +83,12 @@ export class ExamplePage1Component implements OnInit{
         { label: 'Goal', color: '#628AB3'}
       ],
       groupDataHighestId: 'Cycle',
+      xAxisLabel: {
+        isLebelBreak: true,
+      }
     }
-    this.dtsLeg3LineChart = new LineChartCopy('#svgDrillDownLineContainer', lineChartGroupData, lineChartOption);
-    this.dtsLeg3LineChart.clickEvent = (d) => {
+    this.dtsDDLineChart = new LineChartCopy('#svgDrillDownLineContainer', lineChartGroupData, lineChartOption);
+    this.dtsDDLineChart.clickEvent = (d) => {
       console.log('clicked', d.labelBottom);
     };
   }
