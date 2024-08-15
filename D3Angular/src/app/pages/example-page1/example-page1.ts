@@ -1,48 +1,35 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { LineChart, LineChartData, LineChartGroupData, LineOptions } from '../../shared/LineChart';
-import { lineChartUpdateData1, lineChartUpdateData2, lineChartUpdateData5 } from '../../data/lineChartFake.data';
-
+import { LineChartCopy } from '../../shared/LineChart-Copy';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NgbModule],
+  imports: [],
   templateUrl: './example-page1.html',
   styleUrl: './example-page1.scss'
 })
 export class ExamplePage1Component implements OnInit{
   title = 'D3Angular';
   radarChart = null;
-  dtsLeg3LineChart: LineChart;
+  dtsLeg3LineChart: LineChartCopy;
 
-  constructor(private modalService: NgbModal) {
+  constructor() {
   }
 
   ngOnInit(): void {
     setTimeout(() => {
-
       this.loadLineChart();
       // browser resize event
-      window.addEventListener('resize', () => {
-        if (this.dtsLeg3LineChart) {
-          this.dtsLeg3LineChart.resize();
-        }
-      });
+      // window.addEventListener('resize', () => {
+      //   if (this.dtsLeg3LineChart) {
+      //     this.dtsLeg3LineChart.resize();
+      //   }
+      // });
     }, 1000);
 
   }
 
   loadLineChart() {
-    type APIResponseData = {
-      data: {
-        value: number;
-        staionOrStore: string;
-        region: string;
-        isFocusLocation: boolean;
-      }[];
-      groupName: string;      
-    }
     const isdLineData: LineChartData[] = [
       { labelBottom: 'CMI', value: 2, isComparison: false, labelTop: 'NRCC#1' },
       { labelBottom: 'CHS', value: 50, isComparison: false, labelTop: 'NRCC#1' },
@@ -88,28 +75,6 @@ export class ExamplePage1Component implements OnInit{
         data: isdLineData 
       },
     ];
-    const lineChartGroupDataUpdated: LineChartGroupData[] = [
-      { 
-        groupId: 'ISD',
-        groupLabel: 'ISD', 
-        groupColor: {
-          lineColor: '#0F0E38',
-          areaColor: '#E6F0FFCC',
-          dotColor: '#0F0E38'
-        },
-        data: lineChartUpdateData1 
-      },
-      { 
-        groupId: 'Cycle',
-        groupLabel: '8 Week Avg', 
-        groupColor: {
-          lineColor: '#B02A4C',
-          areaColor: '#F9EEF1CC',
-          dotColor: '#B02A4C'
-        },  
-        data: lineChartUpdateData2 
-      },
-    ];
     const lineChartOption: LineOptions = {
       margin: { top: 40, right: 20, bottom: 30, left: 50 },
       maxHeight: 750,
@@ -125,43 +90,9 @@ export class ExamplePage1Component implements OnInit{
       ],
       groupDataHighestId: 'Cycle',
     }
-
-    const emptyCase: LineChartGroupData[] = [
-      { 
-        groupId: 'Cycle',
-        groupLabel: '8 Week Avg', 
-        groupColor: {
-          lineColor: '#B02A4C',
-          areaColor: '#F9EEF1CC',
-          dotColor: '#B02A4C'
-        },
-        data: [] 
-      },
-      { 
-        groupId: 'ISD',
-        groupLabel: 'ISD',
-        groupColor: {
-          lineColor: '#0F0E38',
-          areaColor: '#D0DDF7',
-          dotColor: '#0F0E38'
-        }, 
-        data: [] 
-      },
-    ];
-    this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartUpdateData5, lineChartOption);
-    // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartUpdateData4, lineChartOption);
-    // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', emptyCase, lineChartOption);
-    // this.dtsLeg3LineChart = new LineChart('#svgLineContainer', lineChartGroupDataUpdated, lineChartOption);
-    // console.log('::dtsLeg3LineChart.groupData::',dtsLeg3LineChart.groupData);
-    
-    // this.dtsLeg3LineChart.groupData = lineChartGroupDataUpdated;
-    // setTimeout(() => {
-    //   this.dtsLeg3LineChart.render(true);
-    // }, 5000);
-    
-  }
-
-  public open(modal: any): void {
-    this.modalService.open(modal);
+    this.dtsLeg3LineChart = new LineChartCopy('#svgDrillDownLineContainer', lineChartGroupData, lineChartOption);
+    this.dtsLeg3LineChart.clickEvent = (d) => {
+      console.log('clicked', d.labelBottom);
+    };
   }
 }

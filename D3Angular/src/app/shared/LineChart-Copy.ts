@@ -1,60 +1,14 @@
 import * as d3 from 'd3';
 import { PredefinedShape } from '../helper/predefinedShape';
+import { DotLabelPositionValueMatcher, LineChartColors, LineChartData, LineChartDotLebelAdjustment, LineChartGroupData, LineOptions } from "./LineChart";
 
-export type LineOptions = {
-    margin: { top: number, right: number, bottom: number, left: number };
-    maxHeight?: number;
-    isVHetchingLine?: boolean;
-    isTargetLine?: boolean;
-    targetData?: {
-        value: number;
-        color: string;
-    };
-    isAutoScale?: boolean;
-    groupDataHighestId?: string;
-    legendData:{
-        label: string;
-        color: string;
-    }[];
-};
-export type LineChartData = {
-    labelBottom: string;
-    labelTop?: string;
-    value: number;
-    color?: string;
-    isComparison: boolean; // identifier to plot bold style hetching lines
-};
-export type LineChartGroupData = {
-    groupId: string; // unique id for the group @patern: [a-zA-Z0-9_]
-    groupLabel: string;
-    groupColor: LineChartColors;
-    data: LineChartData[];
-};
-export type LineChartColors = {
-    lineColor: string;
-    areaColor: string; // area fill color will be gradient with secondary color as white
-    dotColor: string;
-};
-export type LineChartDotLebelAdjustment = {
-    index: number,
-    caseValue: DotLabelPositionValueMatcher,
-    values: number[],
-    cords?: {x: number, y: number}[]
-}
-export enum DotLabelPositionValueMatcher {
-    'lower',
-    'higher',
-    'equal'
-}
-export type onClickCallBack = (data: LineChartData) => LineChartData;
-
-export class LineChart {
+export class LineChartCopy {
     /*
     * @Constraint: The length of the data array should be the same for all the groups
     * @Constraint: For multiple lines X axis value should be same
     */
     groupData: LineChartGroupData[];
-
+   
     private container: string;
     private defaultOptions: LineOptions = {
         margin: { top: 20, right: 20, bottom: 30, left: 50 },
@@ -81,14 +35,14 @@ export class LineChart {
     labelRotationBottomThresold: number = 11; // x-axis bottom label rotation based on data length thresold
     isDataSwaping: boolean = false;
     dotLabelPositionDiffThresold: number = 8; // dot label position adjustment thresold
-
+   
     constructor(container: string, groupData:LineChartGroupData[], options?: LineOptions) {
         this.chartOptions = { ...this.defaultOptions, ...options };
         this.container = container;
         this.groupData = groupData;
         this.render();
     }
-
+   
     /**
      * Renders a chart within a specified container element, handling
      * dimensions, margins, and various chart options.
@@ -98,7 +52,7 @@ export class LineChart {
      * @returns If the `isInterim` parameter is true, the `render` function will return without performing
      * any further actions.
      */
-    public render(isInterim?: boolean) {        
+    public render(isInterim?: boolean) {
         if(isInterim){ // not in use have to re-itirate
             this.updateSVGElem();
             this.coldRedraw = false;
@@ -110,18 +64,18 @@ export class LineChart {
         if (document.querySelector(`${this.container} > .chartWrapperG`)) {
             d3.select(`${this.container} > .chartWrapperG`).remove();
         }
-        
+   
         this.updateSVGElem();
-        
+   
         this.addLinearGradient();
         this.dropShadowFilter();
         this.gausianBlurFilter();
-        
+   
         this.drawChartLines();
         // Add grid lines
         this.addHetchingLines();
     }
-
+   
     /**
      * The function `updateSVGElem` updates the SVG element based on container dimensions and chart
      * options, adjusting width & height based on it's immediate containetr.
@@ -137,7 +91,7 @@ export class LineChart {
         // update the SVG element
         const svgWidth = this.width + this.chartOptions.margin.left + this.chartOptions.margin.right + this.chartShiftX + this.chartOptions.margin.left * 2; // to add the y-axis labels
         let svgHeight = this.height + this.chartOptions.margin.top + this.chartOptions.margin.bottom + 60;
-
+   
         // reset height if maxHeight is defined
         if (this.chartOptions.maxHeight && svgHeight > this.chartOptions.maxHeight) {
             this.height = this.chartOptions.maxHeight - this.chartOptions.margin.top - this.chartOptions.margin.bottom;
@@ -156,7 +110,7 @@ export class LineChart {
             .attr("class", "chartWrapperG")
             .attr("transform", `translate(${this.chartOptions.margin.left + this.chartShiftX}, ${this.chartOptions.margin.top})`);
     }
-
+   
     /**
      * Resizes the chart to fit the container element.
      */
@@ -167,12 +121,12 @@ export class LineChart {
         this.drawChartLines();
         this.addHetchingLines();
     }
-
+   
     private drawChartLines() {
         /*
-        * @Limitation: due to the multiple area fill gradient, 
+        * @Limitation: due to the multiple area fill gradient,
         * we need to draw the higher x-axis value area first and then the lower x-axis value area
-        * to avoid the overlapping of the area fill gradient 
+        * to avoid the overlapping of the area fill gradient
         */
         if(this.isDataSwaping){
             this.groupData = this.groupData.sort((a, b) => {
@@ -208,7 +162,7 @@ export class LineChart {
             // this.drawEmptyChartMessageFullBlur
         }
     }
-
+   
     /**
      * The `drawGoalSection` function creates a goal line chart with data points and
      * animations.
@@ -238,7 +192,7 @@ export class LineChart {
             .attr("transform", `translate(${this.chartOptions.margin.left + gutterVal},0)`)
             .attr("stroke-linejoin", "round")
             .attr("stroke-linecap", "round");
-
+   
         const updatedPath = d3
             .select(goalPath.node())
             // .select("path")
@@ -248,7 +202,7 @@ export class LineChart {
             .style("fill", "none")
             .style("stroke", this.chartOptions.targetData.color)
             .attr("d", goalLine);
-
+   
         const pathLength = (updatedPath.node() as any).getTotalLength();
         const transitionPath = d3
             .transition()
@@ -302,7 +256,7 @@ export class LineChart {
                 .style("font-size", "10px")
                 .style("fill", that.groupColor.dotColor);
         });
-        
+   
         /*
         singleLineWrapperG.selectAll("circle.dots")
             .style("opacity", 0)
@@ -313,7 +267,7 @@ export class LineChart {
             .style("opacity", 1);
         */
     }
-
+   
     private newdrawGoalSection() {
         // build goal data as LineChartData
         if(d3.select(".lineWrapperG-target").node()){
@@ -341,11 +295,11 @@ export class LineChart {
             // .attr("transform", `translate(${this.chartOptions.margin.left + gutterVal},0)`)
             .attr("stroke-linejoin", "round")
             .attr("stroke-linecap", "round");
-
+   
         // create a path set the d attribute to the goalLine
         let goalDemarcationPathG = d3.select(".lineWrapperG-target").append("g")
             .attr("transform", `translate(-${200},2)`);
-
+   
         goalDemarcationPathG.append("path")
             .attr("d", PredefinedShape.goalLineDemarcation)
             .attr("fill", this.chartOptions.targetData.color);
@@ -370,7 +324,7 @@ export class LineChart {
             .style("fill", "none")
             .style("stroke", this.chartOptions.targetData.color)
             .attr("d", goalLine);
-
+   
         const pathLength = (updatedPath.node() as any).getTotalLength();
         const transitionPath = d3
             .transition()
@@ -382,7 +336,7 @@ export class LineChart {
             .transition(transitionPath)
             .attr("stroke-dashoffset", 0);
     }
-
+   
     private drawLegends(xScale: d3.ScaleLinear<number, number, never>, yScale: d3.ScaleLinear<number, number, never>, legendData: { label: string; color: string; }[]) {
         // Add circular legends below x-axis
         if (this.svgElem.select(".legendWrapper").node() && this.coldRedraw) {
@@ -419,32 +373,32 @@ export class LineChart {
         const bbox = legendWrapper.node().getBBox();
         legendWrapper.attr("transform", `translate(${this.width / 2 - bbox.width / 2}, ${this.height + this.chartOptions.margin.top + 45})`);
     }
-
+   
     private getScalesXY(lineData: LineChartData[]): { yScale: d3.ScaleLinear<number, number, never>; xScale: d3.ScaleLinear<number, number, never>; }{
         const xScale = d3.scaleLinear()
             .domain([0, lineData.length - 1])
             .range([0, this.width]);
-
+   
         const yScale = d3.scaleLinear()
             // .domain([0, d3.max(this.data, d => d.value)]) // Auto scale enabler
             .domain([0, 100])
             .range([this.height, 0]);
-
+   
         return { yScale, xScale };
     }
-
+   
     private createLine(xScale: d3.ScaleLinear<number, number, never>, yScale: d3.ScaleLinear<number, number, never>) {
         return d3.line<LineChartData>()
         .x((d, i) => xScale(i))
         .y(d => yScale(d.value));
     }
-
+   
     /**
      * This function appends circles and text labels to a chart, animating their opacity over time.
      * @param {any} posX - it represents the x-coordinate position where the dots will be drawn on the chart
      * and text labels on the x-axis of the chart.
      * @param {any} posY - it represents the y-coordinate position where the dots will be drawn on the chart
-     * @param {any} chartWrapperG - it represents the SVG group element where the dots and labels will be appended. 
+     * @param {any} chartWrapperG - it represents the SVG group element where the dots and labels will be appended.
      * @param {LineChartData[]} lineData - it represents the data that will be used to draw the dots and labels on the chart.
      * @returns it appends circles and text labels no returns
      */
@@ -459,7 +413,6 @@ export class LineChart {
             .attr('r', 6)
             .style("stroke", this.groupColor.dotColor)
             .style("stroke-width", "5px")
-            // .style('fill', '#ffc107') // yellow suggested color
             .style('fill', 'white')
             .style("filter", "url(#drop-shadow)")
             // add click event to the dots
@@ -469,14 +422,9 @@ export class LineChart {
         const that = this;
         chartWrapperG.selectAll("circle.dots").each(function(d, i){
             let _posY = posY(d, i);
-            // for given {this.chartOptions.groupDataHighestId} line group the dot label should be below the dot
             if(that.groupKey === that.chartOptions.groupDataHighestId){
                 _posY += 24;
-            } 
-            // // {10} is the gutter value to maintain the asthetic of the dots
-            // if(d.value > that.chartOptions.targetData?.value - 10){ 
-            //     _posY += 20;
-            // }
+            }
             else{
                 _posY -= 14;
             }
@@ -490,7 +438,7 @@ export class LineChart {
                 .attr("class", `dot-label-${i}`)
                 .style("fill", that.groupColor.dotColor);
         });
-        
+   
         chartWrapperG.selectAll("circle.dots")
             .style("opacity", 0)
             .transition()
@@ -506,7 +454,7 @@ export class LineChart {
             .duration(2000)
             .style("opacity", 1);
     }
-
+   
     private drawAxes(xScale, yScale, lineData: LineChartData[]) {
         // check if the axis is already present
         if (this.svgElem.select(".x-axis").node() && !this.coldRedraw) {
@@ -515,7 +463,7 @@ export class LineChart {
         // remove both axes
         this.svgElem.select(".x-axis").remove();
         this.svgElem.select(".y-axis").remove();
-        
+   
         // increase the xScale range by {this.chartShiftX} to shift the x-axis to the right
         xScale.range([this.chartShiftX, this.width + this.chartShiftX]);
         const xAxisGen = d3.axisBottom(xScale);
@@ -524,7 +472,7 @@ export class LineChart {
         xAxisGen.tickPadding(35);
         // array of labels extract from data
         xAxisGen.tickFormat((d, i) => lineData[i].labelBottom);
-        
+   
         // xAxisGenerator.tickSize(-this.height);
         this.svgElem.append("g")
             .attr("class", "x-axis")
@@ -532,7 +480,7 @@ export class LineChart {
             .attr("color", "#000000")
             .attr("transform", `translate(0, ${this.height})`)
             .call(xAxisGen);
-
+   
         this.svgElem.select('.x-axis').selectAll("path")
             .style("stroke-dasharray", "0, 0");
         // select all tick class inside x-axis and get data from the tick and append text
@@ -540,13 +488,16 @@ export class LineChart {
         const textRotation = lineData.length > this.dataRotationThresold ? -45 : 0;
         const translateXVal = lineData.length > this.dataRotationThresold ? 35 : 0;
         const translateYVal = lineData.length > this.dataRotationThresold ? this.height + 40 : this.height + 20;
-        this.svgElem.select('.x-axis').selectAll(".tick").append("text").data(lineData)
+        this.svgElem.select('.x-axis').selectAll(".tick")
+            .data(lineData)
+            .on("click", (evt, data) => this.clickEvent(data))
+            .append("text").data(lineData)
             .text(d => d.labelTop)
             .style("fill", "black")
             .style("font-size", "14px")
             .attr("y", -25)
             .attr("transform", `translate(${translateXVal}, -${translateYVal}) rotate(${textRotation})`);
-
+   
         const yAxisGen = d3.axisLeft(yScale);
         // if autoScale is enabled then the ticks should be calculated based on the data
         if (this.chartOptions.isAutoScale) {
@@ -558,22 +509,22 @@ export class LineChart {
         // yAxisGen fontSize
         yAxisGen.tickFormat(d => `${d}%`);
         yAxisGen.tickPadding(25);
-        
+   
         yAxisGen.tickSize(0);
-
+   
         this.svgElem.append("g")
             .attr("class", "y-axis")
             .style("font-size", "14")
             .attr("color", "#000000")
             .call(yAxisGen);
-
+   
         this.svgElem.select('.y-axis').selectAll("path")
             .style("stroke-dasharray", "0, 0");
-        
+   
         // select all axis and cjange color
         this.svgElem.select('.x-axis').selectAll("path").style("stroke", "#ddd").style("stroke-width", "2px");
         this.svgElem.select('.y-axis').selectAll("path").style("stroke", "#ddd").style("stroke-width", "2px");
-
+   
         // get the x-axis path and clone it and append it. Increase the width of the path
         this.svgElem.select('.x-axis').select("path").clone()
             .attr("transform", `translate(-${this.chartShiftX}, 0)`)
@@ -590,7 +541,7 @@ export class LineChart {
         // calling the addLabelOfYaxis function to add the y-axis label after the y-axis is drawn
         this.addLabelOfYaxis();
     }
-
+   
     /**
      * The function adds dashed horizontal lines to the x-axis ticks in an SVG element.
      */
@@ -607,7 +558,7 @@ export class LineChart {
             });
             // .style("stroke", "#D8D8D8");
     }
-
+   
     private updatePath(line, lineData: LineChartData[], chartWrapperG: d3.Selection<d3.BaseType, unknown, HTMLElement, any>) {
         const updatedPath = d3
         .select(chartWrapperG.node())
@@ -619,7 +570,7 @@ export class LineChart {
         .style("fill", "none")
         .style("stroke", this.groupColor.lineColor)
         .attr("d", line);
-
+   
         const pathLength = (updatedPath.node() as any).getTotalLength();
         // https://github.com/d3/d3-transition
         const transitionPath = d3
@@ -632,7 +583,7 @@ export class LineChart {
         .transition(transitionPath)
         .attr("stroke-dashoffset", 0);
     }
-
+   
     /**
      * Appends a text element to the SVG element for displaying y-axis plot label
      */
@@ -648,13 +599,13 @@ export class LineChart {
             .style("font-size", "14px")
             .text("% of Ontime Shipments");
     }
-
+   
     private getPositionXY(xScale: d3.ScaleLinear<number, number, never>, yScale: d3.ScaleLinear<number, number, never>, lineData: LineChartData[]) {
         const posX = (_, i) => xScale(i);
         const posY = (d, _) => yScale(d.value);
         return { posX, posY };
     }
-
+   
     /**
      * Appends an SVG path element with specified attributes to a given chart
      * wrapper SVG group.
@@ -671,21 +622,21 @@ export class LineChart {
             .attr("stroke-linecap", "round")
             .attr("stroke-width", 1.5);
     }
-
+   
     private drawAreas(lineGroupData: LineChartGroupData[]){
         // change the oreder of the lineGroupData based on the groupDataHighestId
         // specific logic to handle area overlap issue
         lineGroupData = lineGroupData.sort((a, b) => {
             return a.groupId === this.chartOptions.groupDataHighestId ? 1 : -1;
         });
-
+   
         lineGroupData.forEach(lineData => {
             const { yScale, xScale } = this.getScalesXY(lineData.data);
             const area = d3.area<LineChartData>()
                 .x((d, i) => xScale(i))
                 .y0(this.height)
                 .y1(d => yScale(d.value));
-
+   
             let areaWrapperGroup;
             if(d3.select(".areaWrapperG").node()){
                 areaWrapperGroup = d3.select(".areaWrapperG");
@@ -709,13 +660,13 @@ export class LineChart {
                 .attr("d", area);
         });
     }
-
+   
     private updateChart(lineData: LineChartData[], lineIndex: number) {
         const singleLineWrapperG = d3.select(".chartWrapperG")
             .append("g")
             .attr("transform", `translate(${this.chartShiftX},0)`)
             .attr("class", `lineWrapperG-${lineIndex}`);
-
+   
         this.drawEmptyPath(singleLineWrapperG);
         const { yScale, xScale } = this.getScalesXY(lineData);
         const { posX, posY } = this.getPositionXY(xScale, yScale, lineData);
@@ -723,7 +674,7 @@ export class LineChart {
         this.updatePath(line, lineData, singleLineWrapperG);
         this.drawDotsWithLabel(posX, posY, singleLineWrapperG, lineData);
     }
-
+   
     /**
      * Adds linear gradients to SVG elements based on group data.
      */
@@ -736,7 +687,7 @@ export class LineChart {
                 .attr("gradientUnits", "userSpaceOnUse")
                 .attr("x1", 0).attr("y1", this.height)
                 .attr("x2", 0).attr("y2", 0);
-    
+   
             linearGradient.selectAll("stop")
                 .data([
                     { offset: "0%", color: "#ffffff" },
@@ -747,7 +698,7 @@ export class LineChart {
                 .attr("stop-color", d => d.color);
         });
     }
-
+   
     /**
      * Creates a drop shadow filter effect using SVG filters.
      */
@@ -778,7 +729,7 @@ export class LineChart {
         .attr('in2', 'the-shadow')
         .attr('mode', 'normal');
     }
-
+   
     /**
      * Adjusts the position of dot labels based on matched data
      * values when the difference of 1 single dot value of 2 data sets is {this.dotLabelPositionDiffThresold}
@@ -790,35 +741,35 @@ export class LineChart {
             const lineIndex = ind;
             d3.select(`.lineWrapperG-${ind} .dotsWrapper`).selectAll(`text`).each(function(d, i){
                 const filteredMatchedIndex = matchedByValueWithinThresoldData.filter(d => d.index === i);
-                if(filteredMatchedIndex.length === 0){
-                    return;
-                }
-                if(filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.lower){
-                    if(lineIndex === 0){ // checking for the first line group to adjust the label position below the dot
+                let pointValues;
+                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.lower){
+                    pointValues = filteredMatchedIndex[0].values;
+                    if(lineIndex === 0){
                         d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y + 24);
                     }
-                    else{ // for the second line group onwards the label should be above the dot
+                    else{
                         d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y - 14);
                     }
                 }
-                if(filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.higher){
-                    if(lineIndex === 0){ // checking for the first line group to adjust the label position below the dot
+                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.higher){
+                    pointValues = filteredMatchedIndex[0].values;
+                    if(lineIndex === 0){
                         d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y - 14);
                     }
-                    else{ // for the second line group onwards the label should be above the dot
+                    else{
                         d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y + 24);
                     }
                 }
-                if(filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.equal){
-                    // @enhancement: decide whether to move the label up or down based on the previous and next label position
-                    // @limitation: hardcodedly setting the y position of the label to keep it in the above of the dot
+                if(!!filteredMatchedIndex[0] && filteredMatchedIndex[0].caseValue === DotLabelPositionValueMatcher.equal){
+                    // @enhancement:decide whether to move the label up or down based on the previous and next label position
+                    // @limitation: hardcodedly setting the y position of the label to keep it in the top of the dot
                     d3.select(this).attr("y", filteredMatchedIndex[0].cords[lineIndex].y - 14);
                 }
             });
         }
         return matchedByValueWithinThresoldData;
     }
-    
+   
     private adjustSameValueDots(matchedByValueWithinThresoldData: [LineChartDotLebelAdjustment]) {
         /* Select all circle elements of first line with same value and increase the circle stroke */
         const that = this;
@@ -833,7 +784,7 @@ export class LineChart {
             }
         });
     }
-
+   
     private setThresoldMatchCordinates(matchedByValueWithinThresoldData: [LineChartDotLebelAdjustment]) {
         this.groupData.forEach((group, ind) => {
             const lineData = group.data;
@@ -851,7 +802,7 @@ export class LineChart {
         });
         return matchedByValueWithinThresoldData;
     }
-
+   
     private setThresholdMatches() {
         let lineData = [];
         this.groupData.forEach((group, index) => lineData[index] = group.data.map((d, i) => d.value));
@@ -867,7 +818,7 @@ export class LineChart {
             else {
                 caseValue = DotLabelPositionValueMatcher.lower;
             }
-
+   
             if (Math.abs(value - lineData[1][index]) < this.dotLabelPositionDiffThresold) {
                 const dd: LineChartDotLebelAdjustment = { index, caseValue, values: [value, lineData[1][index]], cords: [] };
                 if (!!matchedByValueWithinThresoldData) {
@@ -880,7 +831,7 @@ export class LineChart {
         });
         return { matchedByValueWithinThresoldData };
     }
-
+   
     /**
      * The function `comparisonLabelStyleAdjust` adjusts the style of labels on the x-axis based on a
      * comparison property in the data.
@@ -924,7 +875,7 @@ export class LineChart {
             .attr("filter", "url(#gaussian-blur-rect)")
             .attr("class", "empty-chart-message-wrapper");
             // .style("filter", "url(#drop-shadow)");
-        
+   
         // add text to the rectangle
         d3.select(".empty-chart-message").append("text")
             .text("No records found.")
@@ -936,7 +887,7 @@ export class LineChart {
             .style("fill", "#000000")
             .style("font-weight", "bold");
     }
-    
+   
     private drawEmptyChartMessageCentered() {
         // draw a centere message box
         const rectWidth = 210;
@@ -956,7 +907,7 @@ export class LineChart {
             .attr("transform", `translate(-${this.chartShiftX},0)`)
             .attr("class", "empty-chart-message-wrapper");
             // .style("filter", "url(#drop-shadow)");
-        
+   
         // add text to the rectangle
         d3.select(".empty-chart-message").append("text")
             .text("No records found.")
@@ -990,8 +941,9 @@ export class LineChart {
         .attr('result', 'goo');
     }
 
-    // add a callback function to the click event
+    // add a callback function to the expose click event
     public clickEvent(data?: LineChartData, callBack?: any){
+        debugger;
         if(!!data && !!callBack){
             if(typeof callBack !== "function"){
                 return;
